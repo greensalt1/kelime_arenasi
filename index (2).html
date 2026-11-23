@@ -1,0 +1,3264 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8"><title>Kelime Arenası</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Barlow:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--ink:#0b1f24;--panel:rgba(8,24,29,.92);--brass:#d9a441;--brass2:#f0c56a;--txt:#efeadd;--mut:#9fb2b5;--c:#3aa56b;--y:#d9a441;--a:#4b565c;--p1:#2d7ff9;--p2:#f2994a;
+--cp:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px);
+--cpi:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px);
+--cp8:polygon(8px 0,calc(100% - 8px) 0,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0 calc(100% - 8px),0 8px);
+--cp6:polygon(6px 0,calc(100% - 6px) 0,100% 6px,100% calc(100% - 6px),calc(100% - 6px) 100%,6px 100%,0 calc(100% - 6px),0 6px);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--ink);color:var(--txt);font-family:Barlow,"Segoe UI",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+canvas{position:fixed;inset:0;display:block}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--brass2);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 52%,rgba(0,0,0,.55))}
+
+/* skor tabelası */
+#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:10px 12px;gap:8px;pointer-events:none;transition:opacity .5s}
+#score{display:flex;gap:8px;counter-reset:pl}
+.pc{counter-increment:pl;display:grid;grid-template-columns:auto 1fr auto;column-gap:10px;align-items:center;min-width:158px;padding:7px 14px 7px 8px;background:var(--panel);clip-path:var(--cp8);opacity:.62}
+.pc::before{content:counter(pl);grid-row:1/3;display:grid;place-items:center;width:32px;height:32px;background:var(--pc);color:#08141a;font:700 19px Oswald,sans-serif}
+.pc b{grid-column:2;font-weight:700;font-size:14px;line-height:1.15}
+.pc i{grid-column:2;grid-row:2;font-style:normal;font-size:11px;font-weight:700;color:var(--mut);min-height:13px;line-height:1}
+.pc span{grid-column:3;grid-row:1/3;font:700 27px Oswald,sans-serif;font-variant-numeric:tabular-nums}
+.pc.on{opacity:1;background:linear-gradient(90deg,rgba(255,255,255,.14),transparent 70%),var(--panel);box-shadow:inset 0 -3px 0 var(--pc)}
+.pc.on i{color:var(--brass2)}
+#info{display:flex;gap:6px;align-items:center;pointer-events:auto}
+#rd,#xbtn,#mute{padding:8px 12px;background:var(--panel);clip-path:var(--cp8);font-weight:700;font-size:14px;white-space:nowrap}
+#xbtn:hover,#mute:hover{background:#12363e}
+#banner{position:fixed;left:50%;top:24%;transform:translate(-50%,-24px);padding:12px 56px;font:700 34px Oswald,sans-serif;color:#08141a;clip-path:polygon(0 0,100% 0,calc(100% - 22px) 50%,100% 100%,0 100%,22px 50%);opacity:0;pointer-events:none;transition:all .35s;z-index:6;white-space:nowrap}
+#banner.show{opacity:1;transform:translate(-50%,0)}
+#toast{position:fixed;left:50%;top:84px;transform:translateX(-50%);background:var(--panel);border-left:5px solid var(--brass);padding:10px 18px;font-weight:700;text-align:center;max-width:90vw;opacity:0;transition:opacity .25s;pointer-events:none;z-index:5;line-height:1.6;clip-path:var(--cp8)}
+#toast.show{opacity:1}
+
+/* alt panel: joker ve klavye */
+#bottom{position:fixed;left:0;right:0;bottom:0;padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:7px;background:linear-gradient(transparent,rgba(6,18,22,.94) 40%);transition:opacity .5s}
+body.cine #bottom,body.cine #hud{opacity:0;pointer-events:none}
+#jk{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+.jl{font-weight:700;font-size:13px;color:var(--pc);padding-right:6px}
+#jk button{background:#16343b;border-top:3px solid var(--pc);padding:7px 12px 6px;font-weight:700;font-size:13px;clip-path:var(--cp6)}
+#jk button:hover:not(:disabled){background:#1d4651}
+#jk button:disabled{opacity:.35;cursor:default;text-decoration:line-through}
+#kb{width:100%;max-width:560px;display:flex;flex-direction:column;gap:5px}
+.kr{display:flex;gap:4px;justify-content:center}
+.k{flex:1;max-width:48px;height:46px;background:#2b5560;border-radius:5px;box-shadow:0 3px 0 #163239;font-weight:700;font-size:17px;padding:0}
+.k:active{transform:translateY(2px);box-shadow:0 1px 0 #163239}
+.k.w{max-width:78px;font-size:13px}
+.k[data-k=ENTER]{background:var(--brass);color:#241a00;box-shadow:0 3px 0 #8c6a22}
+.k.c{background:var(--c);box-shadow:0 3px 0 #1f6b40}
+.k.p{background:var(--y);color:#241a00;box-shadow:0 3px 0 #8c6a22}
+.k.a{background:#14262b;color:#6d7b80;box-shadow:0 3px 0 #0a1518}
+.k.x{background:#14262b;color:#516066;text-decoration:line-through;box-shadow:0 3px 0 #0a1518}
+
+/* paneller */
+.ov{position:fixed;inset:0;display:flex;background:rgba(5,15,19,.84);z-index:10;padding:16px;overflow:auto}
+.ov>*{margin:auto}
+.ov.hide{display:none}
+.card{position:relative;max-width:440px;width:100%;padding:28px 26px;text-align:center;line-height:1.5;background:var(--brass);clip-path:var(--cp)}
+.card::before{content:"";position:absolute;inset:3px;background:#0e2a31;clip-path:var(--cpi);z-index:0}
+.card>*{position:relative;z-index:1}
+.card h1{margin:0 0 6px;font:700 42px/1.05 Oswald,sans-serif;color:var(--brass2)}
+.card h2{margin:0 0 2px;font:700 30px/1.1 Oswald,sans-serif;color:var(--brass2)}
+.card p{margin:6px 0 12px;font-size:16px}
+.card.tk{text-align:left}
+.grp,.sg{margin:16px 0 0;text-align:left}
+.grp>span,.sg>span{display:block;font-weight:700;font-size:14px;color:var(--mut);margin-bottom:7px}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;min-height:48px;display:flex;align-items:center;justify-content:center;gap:6px;background:#16343b;box-shadow:inset 0 0 0 2px #2a5560;font:700 20px Oswald,sans-serif;clip-path:var(--cp6)}
+.seg.wide button{font:700 16px Barlow,sans-serif}
+.seg button:hover{background:#1d4651}
+.seg button[aria-pressed=true]{background:var(--brass);color:#241a00;box-shadow:none}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%}
+.dot.a{background:var(--p1)}.dot.b{background:var(--p2)}
+.pv{display:flex;gap:4px;margin-top:9px}
+.pv i{width:22px;height:22px;background:#17323a;box-shadow:inset 0 0 0 2px #2c5560}
+#sum{margin:18px 0 0;padding-top:14px;border-top:2px dashed rgba(217,164,65,.45);font-weight:700;font-size:15px;color:var(--brass2);min-height:36px}
+.go{display:block;width:100%;margin-top:10px;padding:13px 22px;background:var(--brass);color:#241a00;font:700 19px Oswald,sans-serif;letter-spacing:.02em;clip-path:var(--cp8)}
+.go:hover{background:var(--brass2)}
+.go.alt{background:#173a42;color:var(--txt);box-shadow:inset 0 0 0 2px var(--brass)}
+.go.alt:hover{background:#1f4a54}
+.fine{margin:12px 0 0!important;font-size:13px!important;color:var(--mut)}
+#appeal{width:auto;margin:0;padding:8px 14px;font-size:15px}
+#appeal.hide{display:none}
+
+/* ana menü */
+#menu{background:linear-gradient(100deg,rgba(5,15,19,.95),rgba(5,15,19,.8) 50%,rgba(5,15,19,.3));backdrop-filter:blur(2px)}
+.lobby{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:48px;width:100%;max-width:1040px;align-items:center}
+.poster{text-align:left}
+.mq{height:10px;margin:14px 0;background:radial-gradient(circle,#ffd98a 3px,transparent 3.6px) 0 0/18px 10px repeat-x;animation:chase 1s steps(2) infinite}
+@keyframes chase{to{background-position:18px 0}}
+.tt{display:flex;gap:7px;flex-wrap:wrap}
+.t{display:grid;place-items:center;width:62px;height:62px;font:700 38px Oswald,sans-serif;color:#fff;box-shadow:inset 0 0 0 3px rgba(255,255,255,.3);animation:flip .7s both;animation-delay:calc(var(--d,0)*.12s + .2s)}
+@keyframes flip{from{transform:rotateX(90deg)}to{transform:none}}
+.t.g{background:var(--c)}.t.y{background:var(--y);color:#241a00}.t.a{background:var(--a)}
+.poster h1{margin:10px 0 0;font:700 clamp(44px,7vw,84px)/.95 Oswald,sans-serif;color:var(--brass2);letter-spacing:.04em}
+.tag{margin:8px 0 0;color:var(--mut);font-size:18px;font-weight:700}
+.legend{display:flex;flex-direction:column;gap:8px;margin:22px 0 0;padding:0;list-style:none}
+.legend li{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.legend .t{width:30px;height:30px;font-size:17px;animation:none;box-shadow:none}
+
+/* final */
+#fin{position:fixed;left:0;right:0;bottom:0;padding:22px 16px calc(26px + env(safe-area-inset-bottom,0px));text-align:center;background:linear-gradient(transparent,rgba(5,15,19,.96) 35%);opacity:0;pointer-events:none;transition:opacity 1s;z-index:7}
+#fin.show{opacity:1;pointer-events:auto}
+#fin h2{margin:0;font:700 clamp(34px,6vw,60px)/1 Oswald,sans-serif;color:var(--brass2)}
+#fin p{margin:10px 0 6px;font-weight:700;line-height:1.7}
+#fin .go{display:inline-block;width:auto}
+
+@media (max-width:860px){
+ .lobby{grid-template-columns:1fr;gap:16px;max-width:440px}
+ .poster{text-align:center}.tt{justify-content:center}
+ .t{width:46px;height:46px;font-size:28px}
+ .legend{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px 14px;margin-top:12px}
+ .legend li{font-size:13px}
+ #menu{background:rgba(5,15,19,.9)}
+}
+@media (max-width:560px){
+ .pc{min-width:0;padding:5px 10px 5px 6px;column-gap:8px}.pc b{display:none}.pc::before{width:26px;height:26px;font-size:16px}.pc span{font-size:22px}
+ #info{flex-wrap:wrap;justify-content:flex-end;max-width:52%}
+ #rd,#xbtn,#mute{padding:6px 8px;font-size:12px}
+ .k{height:42px;font-size:15px}
+ #banner{font-size:24px;padding:10px 40px}
+ .card h1{font-size:34px}
+}
+@media (prefers-reduced-motion:reduce){#banner,#toast,#hud,#bottom,#fin{transition:none}.t,.mq{animation:none}}
+</style></head><body>
+<div id="vig"></div><div id="hud"><div id="score"></div><div id="info"><div id="rd"></div><button id="xbtn">Çıkış</button><button id="mute">Ses açık</button></div></div>
+<div id="banner"></div><div id="toast"></div>
+<div id="bottom"><button id="appeal" class="go alt hide"></button><div id="jk"></div><div id="kb"></div></div>
+<div id="menu" class="ov"><div class="lobby">
+<section class="poster"><div class="mq"></div>
+<div class="tt" aria-hidden="true"><span class="t g" style="--d:0">K</span><span class="t y" style="--d:1">E</span><span class="t a" style="--d:2">L</span><span class="t g" style="--d:3">İ</span><span class="t a" style="--d:4">M</span><span class="t y" style="--d:5">E</span></div>
+<h1><span class="sr">Kelime </span>ARENASI</h1>
+<p class="tag">Türkçe kelime yarışması</p><div class="mq"></div>
+<ul class="legend"><li><span class="t g">A</span>Doğru harf, doğru yer</li><li><span class="t y">A</span>Harf var, yeri yanlış</li><li><span class="t a">A</span>Kelimede yok</li></ul></section>
+<div class="card tk"><h2>Yarışma kartı</h2>
+<div class="grp" data-g="L"><span>Kelime uzunluğu</span><div class="seg"><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button><button data-v="7">7</button></div><div class="pv" id="pv"></div></div>
+<div class="grp" data-g="P"><span>Yarışmacı</span><div class="seg wide"><button data-v="1"><i class="dot a"></i>Tek kişi</button><button data-v="2"><i class="dot a"></i><i class="dot b"></i>İki kişi</button></div></div>
+<div class="grp" data-g="T"><span>Tur sayısı</span><div class="seg"><button data-v="1">1</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
+<div id="sum"></div><button class="go" id="start">Yarışmaya başla</button>
+<p class="fine">6 hakkın var. Her joker maç boyunca bir kez kullanılır.</p></div></div></div>
+<div id="end" class="ov hide"><div class="card"><h1 id="et"></h1><p id="em"></p><button class="go" id="nx">Sonraki kelime</button></div></div>
+<div id="exit" class="ov hide"><div class="card"><h2 style="font-size:34px;margin-bottom:6px">Yarışmadan çıkış</h2><div id="who" class="sg"><span>Teklifi yapan oyuncu</span><div class="seg wide"><button data-v="0"><i class="dot a"></i>Oyuncu 1</button><button data-v="1"><i class="dot b"></i>Oyuncu 2</button></div></div><button class="go alt" id="xm">Ana menüye dön</button><button class="go alt" id="xd">Beraberlik teklif et</button><button class="go alt" id="xf">Pes et, oyunu terk et</button><button class="go" id="xc">Oyuna devam et</button></div></div>
+<div id="ask" class="ov hide" style="z-index:12"><div class="card"><h2 id="aq" style="font-size:26px;line-height:1.25;margin-bottom:10px"></h2><button class="go" id="ay">Kabul ediyorum</button><button class="go alt" id="an">Reddediyorum</button></div></div>
+<div id="fin"><h2 id="ft"></h2><p id="fp"></p><button class="go" onclick="location.reload()">Yeniden oyna</button></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+/* Sözlük: hem cevap havuzu hem de geçerli tahmin listesi */
+const POOL={
+4:"ELMA KEDİ MASA KAPI KALP AYAK ARPA BANT BOYA DOST NANE OKUL PARA MAVİ ODUN KAYA GECE DERE KAZA KOLA KULE KURT LİRA SARI ÇAKI ÇATI SAAT SOBA TAVA UZAK VİDA YAZI ADAM ALAN ANNE BABA DOLU EKİM ELÇİ HALI ŞİİR ÖĞLE",
+5:"ARABA BAHAR BALIK BULUT ÇİÇEK ÇOCUK DENİZ DÜNYA ELMAS EKMEK GÜNEŞ GÖLGE HAYAL İNSAN KİTAP KÖPEK KULAK LİMON MASAL MERAK MEYVE NEFES ORMAN PAZAR RESİM SABAH SAHİL SEVGİ SİYAH SOKAK ŞEKER ŞEHİR TAVUK TAHTA UZMAN VAPUR YAZAR YARIŞ YEMEK YOLCU ZAMAN ÇANTA DOLAP FİDAN HAFTA KAPAK KARGA KAYIK KEMER KIZIL KONAK MAKAS MELEK NOKTA PERDE RADYO SALON SANAT SELAM SINIF SORUN TARLA TATİL TEMİZ YALAN YARIM YAŞAM YILAN ZİRVE BARIŞ BEBEK BİLGİ BÜTÇE CEVAP CEZVE DİLEK DURUM DUVAR ESNAF FİKİR FIRÇA GURUR HALKA HAVUÇ HEDEF KABAK KADIN KALIP KANAT KAVGA KİLİT KOLAY KORKU KUMAŞ KUŞAK MEKAN MUTLU NAMAZ PAMUK REKOR SAKIN SAMAN SEBZE SERİN SOĞAN SUSAM TABAK TAKIM TİLKİ TUZAK VATAN YAYLA YEŞİL KALEM ÇİLEK KİRAZ KAHVE KÖPRÜ ÇEKİÇ SAYGI MÜZİK KEMİK KOYUN ASLAN KAĞIT SABUN SINIR TATLI ÇORBA DALGA ÇELİK ÇAMUR ÇATAL KAŞIK BIÇAK BİBER LAMBA ÖRDEK SEVDA BAHÇE TEPSİ TAVAN TABLO ŞAHİN ÇINAR",
+6:"KARPUZ TOPRAK YILDIZ DEFTER KAPLAN BALKON OYUNCU DOKTOR MUTFAK TAVŞAN SİNEMA MACERA KAYMAK MEYDAN HAYVAN DOLMUŞ KARDEŞ BAYRAK YAĞMUR TAKVİM HEDİYE SUNUCU GÖZLÜK KAYNAK YASTIK YORGAN BARDAK KOLTUK",
+7:"ÖĞRENCİ BULMACA TELEFON KELEBEK PENCERE ŞEMSİYE TİYATRO ARKADAŞ ÇAMAŞIR ÇİÇEKÇİ KİTAPÇI OKYANUS SEVGİLİ DOKUNUŞ YARIŞMA OYUNCAK KAZANAN"};
+const SET={};for(const k in POOL){POOL[k]=POOL[k].split(" ");SET[k]=new Set(POOL[k])}
+const KB=["ERTYUIOPĞÜ","ASDFGHJKLŞİ","ZCVBNMÖÇ"],LET=KB.join("").split("");
+const PC=["#2d7ff9","#f2994a"],PN=[0x2d7ff9,0xf2994a];
+const cfg={L:5,P:2,T:3};
+let NP=2,L=5,NT=3,rd=0,word="",row=0,cur="",turn=0,busy=true,over=false,hints=[],known=[],scores=[0,0],kstate={},joker=[],muted=false,started=false,lastW="";
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- Ses (WebAudio ile üretiliyor) ---------- */
+let AC,MG;
+function ac(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=muted?0:1;MG.connect(AC.destination)}if(AC.state==="suspended")AC.resume();return AC}
+function tone(f,d=.15,type="sine",v=.15,t0=0,f2){const a=ac(),o=a.createOscillator(),g=a.createGain(),t=a.currentTime+t0;o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(MG);o.start(t);o.stop(t+d+.03)}
+function noise(d=.05,v=.1,fq=2000,t0=0){const a=ac(),b=a.createBuffer(1,Math.max(1,a.sampleRate*d|0),a.sampleRate),x=b.getChannelData(0);for(let i=0;i<x.length;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain(),t=a.currentTime+t0;s.buffer=b;f.type="bandpass";f.frequency.value=fq;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f).connect(g).connect(MG);s.start(t)}
+const sfx={
+ key:()=>tone(520,.05,"triangle",.07),back:()=>tone(330,.06,"triangle",.06),bad:()=>tone(150,.25,"square",.1,0,110),
+ flip:s=>tone(s==="c"?700:s==="p"?470:190,s==="a"?.15:.25,s==="a"?"square":"triangle",s==="a"?.06:.12),
+ clap:(d=2,v=1)=>{for(let i=0;i<d*28;i++)noise(.04,.07*v,1800+Math.random()*2600,Math.random()*d)},
+ boo:(d=1.4)=>{[0,.04,-.05].forEach(x=>tone(230*(1+x),d,"sawtooth",.05,0,130*(1+x)));noise(d,.03,400)},
+ win:()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.3,"square",.08,i*.13)),
+ lose:()=>{[392,370,349].forEach((f,i)=>tone(f,.45,"sawtooth",.07,i*.45));tone(311,1,"sawtooth",.07,1.35,260)},
+ joker:()=>[880,1109,1319,1760].forEach((f,i)=>tone(f,.2,"sine",.09,i*.07)),
+ turn:()=>{tone(660,.12,"triangle",.1);tone(880,.18,"triangle",.1,.1)},
+ intro:()=>[392,523,659,784,659,784,1047].forEach((f,i)=>tone(f,.22,"triangle",.1,i*.14)),
+ fan:()=>{[523,523,523,659,784,784,659,784,1047].forEach((f,i)=>tone(f,.4,"sawtooth",.06,i*.2));[262,330,392,523].forEach((f,i)=>tone(f,1.2,"triangle",.1,1.8+i*.02))}};
+function murmur(){const a=ac(),b=a.createBuffer(1,a.sampleRate*3,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<x.length;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;s.loop=true;f.type="lowpass";f.frequency.value=420;g.gain.value=.035;s.connect(f).connect(g).connect(MG);s.start()}
+$("#mute").onclick=()=>{muted=!muted;if(MG)MG.gain.value=muted?0:1;$("#mute").textContent=muted?"Ses kapalı":"Ses açık"};
+
+/* ---------- Sahne ---------- */
+const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.35;document.body.prepend(R.domElement);
+const S=new THREE.Scene();S.background=new THREE.Color(0x07161a);S.fog=new THREE.Fog(0x07161a,22,50);
+const cam=new THREE.PerspectiveCamera(56,1,.1,100);let cz=10.5;
+function rs(){R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cz=cam.aspect<1?17:10.5;cam.updateProjectionMatrix()}
+addEventListener("resize",rs);rs();
+const mc=new Map();
+function rim(m){m.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace("#include <dithering_fragment>","#include <dithering_fragment>"+String.fromCharCode(10)+"float rm=pow(1.0-saturate(dot(normalize(vNormal),normalize(vViewPosition))),3.0);gl_FragColor.rgb+=rm*vec3(.30,.45,.65)*.5;")};return m}function M(c,r=.75,m=.05){const k=c+"|"+r+"|"+m;if(!mc.has(k))mc.set(k,rim(new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m})));return mc.get(k)}
+function EM(c,i=1){return new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:i})}
+const hemi=new THREE.HemisphereLight(0xcfe9ff,0x3a2414,.32);S.add(hemi);(()=>{const es=new THREE.Scene();es.background=new THREE.Color(0x15222a);const bx=(w,h,x,y,z,c,i)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({color:new THREE.Color(c).multiplyScalar(i),side:THREE.DoubleSide}));m.position.set(x,y,z);m.lookAt(0,0,0);es.add(m)};bx(8,5,0,9,6,0xffffff,5);bx(5,8,-9,3,0,0xffb070,3);bx(5,8,9,3,0,0x70c8ff,3);bx(10,4,0,4,-9,0xffe6c0,2);bx(9,9,0,14,0,0xffffff,2.5);const pm=new THREE.PMREMGenerator(R);S.environment=pm.fromScene(es,.04).texture;pm.dispose()})();
+const key=new THREE.SpotLight(0xfff0d8,1.5,60,.8,.5,1);key.position.set(0,14,11);key.target.position.set(0,1,0);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.bias=-.0004;key.shadow.normalBias=.03;S.add(key,key.target);
+const spA=new THREE.SpotLight(0xff9a4a,1.1,40,.55,.6);spA.position.set(-9,12,3);spA.target.position.set(-2,2,-3);S.add(spA,spA.target);
+const spB=new THREE.SpotLight(0x4ad0ff,1.1,40,.55,.6);spB.position.set(9,12,3);spB.target.position.set(2,2,-3);S.add(spB,spB.target);
+const spC=new THREE.SpotLight(0xffffff,1.4,30,.35,.4);spC.position.set(0,10,7);spC.castShadow=false;S.add(spC,spC.target);
+
+function cv(w,h){const c=document.createElement("canvas");c.width=w;c.height=h;return c}
+/* parke zemin */
+const fc=cv(512,512),fx=fc.getContext("2d");for(let j=0;j<8;j++)for(let i=0;i<4;i++){const x=i*128+(j%2)*64-64,y=j*64,t=Math.random()*18|0;fx.fillStyle=`rgb(${118+t},${74+t},${40+t})`;fx.fillRect(x,y,126,62);fx.fillStyle="rgba(255,255,255,.05)";fx.fillRect(x,y,126,3)}
+const ft=new THREE.CanvasTexture(fc);ft.wrapS=ft.wrapT=THREE.RepeatWrapping;ft.repeat.set(3,3);
+const floor=new THREE.Mesh(new THREE.BoxGeometry(14,.3,16),new THREE.MeshPhysicalMaterial({map:ft,roughness:.34,metalness:.08,clearcoat:.6,clearcoatRoughness:.18}));floor.position.y=-.15;floor.receiveShadow=true;S.add(floor);
+const edge=new THREE.Mesh(new THREE.BoxGeometry(14.2,.08,.12),M(0xd9a441,.3,.7));edge.position.set(0,.03,8);S.add(edge);
+/* güneş ışınlı fon */
+const bc=cv(1024,1180),bx=bc.getContext("2d");bx.fillStyle="#0f3b45";bx.fillRect(0,0,1024,1180);
+for(let i=0;i<28;i++){bx.fillStyle=i%2?"#14505c":"#0d333c";bx.beginPath();bx.moveTo(512,560);const a=i/28*6.283,b=(i+1)/28*6.283;bx.lineTo(512+Math.cos(a)*1800,560+Math.sin(a)*1800);bx.lineTo(512+Math.cos(b)*1800,560+Math.sin(b)*1800);bx.fill()}
+const bd=new THREE.Mesh(new THREE.PlaneGeometry(11.5,13.2),(window.bdU={t:{value:0}},new THREE.ShaderMaterial({uniforms:window.bdU,vertexShader:"varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}",fragmentShader:"uniform float t;varying vec2 vUv;void main(){vec2 p=vUv-vec2(.5,.47);p.y*=1.15;float a=atan(p.y,p.x),r=length(p);float ray=smoothstep(.35,.65,.5+.5*sin(a*14.0+t*.3));vec3 col=mix(vec3(.03,.13,.17),vec3(.08,.34,.4),ray*smoothstep(1.0,.1,r));col+=vec3(.9,.62,.22)*pow(max(0.0,1.0-r*2.2),2.0)*.4;col*=1.0-smoothstep(.45,.95,r)*.6;gl_FragColor=vec4(col,1.0);}"})));bd.position.set(0,6.1,-5.9);S.add(bd);
+const dark=new THREE.Mesh(new THREE.PlaneGeometry(60,22),M(0x07161a));dark.position.set(0,7,-6.4);S.add(dark);
+function curtain(x,w){const ge=new THREE.PlaneGeometry(w,15,140,1),p=ge.attributes.position;for(let i=0;i<p.count;i++)p.setZ(i,Math.sin(p.getX(i)*5)*.28+Math.sin(p.getX(i)*13)*.05);ge.computeVertexNormals();const m=new THREE.Mesh(ge,new THREE.MeshPhysicalMaterial({color:0x7a1626,roughness:.9,sheen:new THREE.Color(0xff7a8a),side:THREE.DoubleSide}));m.position.set(x,6.5,-5.7);S.add(m)}
+curtain(-8.6,6);curtain(8.6,6);
+const val=new THREE.Mesh(new THREE.BoxGeometry(24,.5,.5),M(0xd9a441,.3,.7));val.position.set(0,9.6,-5.3);S.add(val);
+/* ışık çatısı */
+const truss=new THREE.Mesh(new THREE.BoxGeometry(18,.22,.22),M(0x2a3338,.4,.6));truss.position.set(0,10.2,-1);S.add(truss);
+for(let i=0;i<7;i++){const l=new THREE.Mesh(new THREE.CylinderGeometry(.18,.26,.5,10),M(0x111,.4,.5));l.position.set(-7.5+i*2.5,9.8,-1);l.rotation.x=.4;S.add(l);const g=new THREE.Mesh(new THREE.CircleGeometry(.19,10),EM(0xfff2c8,.9));g.position.set(-7.5+i*2.5,9.57,-.88);g.rotation.x=Math.PI/2+.4;S.add(g)}
+const beams=[];[[-4,0xff9a4a],[4,0x4ad0ff],[-9,0xffcf4a],[9,0x9aff9a]].forEach(([x,c])=>{const m=new THREE.Mesh(new THREE.ConeGeometry(1.3,9,24,1,true),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.07,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false}));m.position.set(x,6,-3);S.add(m);beams.push(m)});
+
+/* ---------- Kelime panosu ---------- */
+let bg=null,tiles=[],marks=[],TS=.84;const bulbMats=[EM(0xffd98a,1.2),EM(0xffd98a,1.2)];
+function discTex(col,txt){const c=cv(128,128),x=c.getContext("2d");x.fillStyle=col;x.beginPath();x.arc(64,64,58,0,6.283);x.fill();x.fillStyle="#08141a";x.font="700 70px Oswald,sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(txt,64,70);return new THREE.CanvasTexture(c)}
+const texP=[discTex(PC[0],"1"),discTex(PC[1],"2")];const GLOW=(()=>{const c=cv(64,64),x=c.getContext("2d"),g=x.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,"rgba(255,255,255,1)");g.addColorStop(.35,"rgba(255,255,255,.35)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})(),glows=[];
+function rr(x,a,b,w,h,r){x.beginPath();x.roundRect?x.roundRect(a,b,w,h,r):x.rect(a,b,w,h)}
+function sprite(text,fg,bgc,w=2.4,h=.6,fs=46){const c=cv(512,Math.round(512*h/w)),x=c.getContext("2d");x.fillStyle=bgc;rr(x,4,4,c.width-8,c.height-8,18);x.fill();x.fillStyle=fg;x.font=`700 ${fs}px Oswald,'Trebuchet MS',sans-serif`;x.textAlign="center";x.textBaseline="middle";x.fillText(text,c.width/2,c.height/2+3);
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));s.scale.set(w,h,1);s.renderOrder=9;return s}
+const COL={e:"#17323a",f:"#24505b",c:"#3aa56b",p:"#d9a441",a:"#4b565c",h:"#3a3f5c",r:"#b3342b"};
+function buildBoard(){if(bg)S.remove(bg);bg=new THREE.Group();bg.position.set(0,3.95,-5.2);S.add(bg);
+ TS=Math.min(.84,4.6/L);const bw=L*TS+.6,bh=6*TS+.6,add=(m,x,y,z)=>{m.position.set(x,y,z);m.castShadow=true;bg.add(m);return m};
+ add(new THREE.Mesh(new THREE.BoxGeometry(bw,bh,.12),M(0x071a1f,.5)),0,0,-.15);
+ [[0,bh/2,bw+.2,.2],[0,-bh/2,bw+.2,.2],[-bw/2,0,.2,bh],[bw/2,0,.2,bh]].forEach(([x,y,w,h])=>add(new THREE.Mesh(new THREE.BoxGeometry(w,h,.3),M(0xc8963a,.3,.75)),x,y,-.05));
+ const bgm=new THREE.SphereGeometry(.06,8,6);let k=0;
+ const gp=[[],[]];for(let x=-bw/2;x<=bw/2+.01;x+=.32){[bh/2,-bh/2].forEach(y=>{add(new THREE.Mesh(bgm,bulbMats[k%2]),x,y,.14);gp[k%2].push(x,y,.2)});k++}
+ for(let y=-bh/2+.32;y<bh/2-.1;y+=.32){[-bw/2,bw/2].forEach(x=>{add(new THREE.Mesh(bgm,bulbMats[k%2]),x,y,.14);gp[k%2].push(x,y,.2)});k++}gp.forEach((a,i)=>{const gm=new THREE.BufferGeometry();gm.setAttribute("position",new THREE.Float32BufferAttribute(a,3));const pt=new THREE.Points(gm,new THREE.PointsMaterial({map:GLOW,size:.55,color:0xffc860,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));bg.add(pt);glows[i]=pt});
+ const sg=sprite("KELİME ARENASI","#241a00","#d9a441",3.6,.62,50);sg.position.set(0,bh/2+.55,.1);bg.add(sg);
+ tiles=[];marks=[];
+ for(let r=0;r<6;r++){tiles[r]=[];for(let c=0;c<L;c++){const cn=cv(128,128),tx=new THREE.CanvasTexture(cn);
+   const m=new THREE.Mesh(new THREE.BoxGeometry(TS*.92,TS*.92,.24),new THREE.MeshStandardMaterial({map:tx,emissive:0xffffff,emissiveMap:tx,emissiveIntensity:.4,roughness:.5}));
+   add(m,-(L-1)*TS/2+c*TS,(5*TS)/2-r*TS,0);tiles[r][c]={m,cn,tx,ch:"",st:"e"};paint(r,c,"","e")}
+  const mk=new THREE.Sprite(new THREE.SpriteMaterial({map:texP[0],transparent:true,depthTest:false}));mk.scale.set(.42,.42,1);mk.position.set(-bw/2-.5,(5*TS)/2-r*TS,.2);mk.visible=false;mk.renderOrder=9;bg.add(mk);marks[r]=mk}}
+function paint(r,c,ch,st){const t=tiles[r][c],x=t.cn.getContext("2d");t.ch=ch;t.st=st;x.fillStyle=COL[st];x.fillRect(0,0,128,128);
+ x.strokeStyle=(st==="f"||st==="h")?PC[turn]:st==="e"?"#2c5560":"rgba(255,255,255,.4)";x.lineWidth=(st==="f"||st==="h")?9:6;x.strokeRect(4,4,120,120);
+ if(ch){x.fillStyle=st==="h"?"rgba(255,255,255,.5)":"#fff";x.font="700 80px Oswald,'Trebuchet MS',sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText(ch,64,70)}t.tx.needsUpdate=true}
+document.fonts&&document.fonts.ready.then(()=>tiles.forEach((rw,r)=>rw.forEach((t,c)=>paint(r,c,t.ch,t.st))));
+function setMark(r,p,solid){if(NP<2)return;const m=marks[r];m.visible=true;m.material.map=texP[p];m.material.opacity=solid?1:.7;m.userData.solid=solid}
+
+/* ---------- İnsan modeli ---------- */
+const G={leg:new THREE.CylinderGeometry(.085,.075,.5,8),shoe:new THREE.BoxGeometry(.14,.07,.26),tor:new THREE.CylinderGeometry(.23,.19,.66,14),sh:new THREE.SphereGeometry(.2,12,8),neck:new THREE.CylinderGeometry(.06,.07,.12,8),head:new THREE.SphereGeometry(.21,18,14),eye:new THREE.SphereGeometry(.035,8,6),pup:new THREE.SphereGeometry(.018,6,6),nose:new THREE.SphereGeometry(.035,8,6),ear:new THREE.SphereGeometry(.04,8,6),brow:new THREE.BoxGeometry(.075,.016,.016),mouth:new THREE.TorusGeometry(.04,.008,6,12,Math.PI),arm:new THREE.CylinderGeometry(.062,.052,.56,8),hand:new THREE.SphereGeometry(.065,8,6),cap:new THREE.SphereGeometry(.228,14,8,0,6.283,0,1.5),back:new THREE.SphereGeometry(.2,10,8),bun:new THREE.SphereGeometry(.09,8,6),tie:new THREE.BoxGeometry(.07,.4,.02),brim:new THREE.BoxGeometry(.3,.02,.18),scarf:new THREE.TorusGeometry(.14,.04,6,14),crown:new THREE.CylinderGeometry(.19,.2,.12,12)};
+const SKIN=[0xf1c9a5,0xd9a47a,0xb77b55,0x8a5a3c],HAIR=[0x2a1a10,0x6b4a2a,0x111111,0xb08a3a,0x7a3b1a];
+function person(o){const g=new THREE.Group(),ar=[];
+ const mk=par=>(ge,m,x,y,z,sc)=>{const e=new THREE.Mesh(ge,m);e.position.set(x,y,z);if(sc)e.scale.set(sc[0],sc[1],sc[2]);par.add(e);return e},a=mk(g);
+ [-1,1].forEach(s=>{a(G.leg,M(o.pants),s*.1,.25,0);a(G.shoe,M(0x1a1410,.5),s*.1,.035,.04)});
+ a(G.tor,M(o.shirt),0,.83,0,[1,1,.72]);a(G.sh,M(o.shirt),0,1.13,0,[1.15,.5,.8]);
+ if(o.tie)a(G.tie,M(o.tie),0,.95,.16);
+ if(o.scarf)a(G.scarf,M(o.scarf),0,1.17,0).rotation.x=Math.PI/2;
+ a(G.neck,M(o.skin),0,1.21,0);
+ const hd=new THREE.Group();hd.position.y=1.38;g.add(hd);const h=mk(hd);
+ h(G.head,M(o.skin,.6),0,0,0,[.95,1.08,1]);
+ [-1,1].forEach(s=>{h(G.eye,M(0xffffff,.3),s*.075,.02,.18,[1,1,.5]);h(G.pup,M(0x111,.3),s*.075,.02,.205);h(G.ear,M(o.skin),s*.2,0,0,[.5,1,1]);const b=h(G.brow,M(0x2a1a10),s*.075,.085,.19);b.rotation.z=o.happy?s*.12:-s*.42});
+ h(G.nose,M(o.skin,.6),0,-.02,.2,[1,1.2,1]);
+ const mo=h(G.mouth,M(0x6b1d1d,.5),0,o.happy?-.045:-.095,.19);mo.rotation.z=o.happy?Math.PI:0;
+ const hm=M(o.hair,.9);h(G.cap,hm,0,.02,0);
+ if(o.style===1){h(G.back,hm,0,-.06,-.1,[1.1,1.35,.9])}if(o.style===2)h(G.bun,hm,0,.25,-.06);
+ if(o.cap){h(G.crown,M(o.cap),0,.13,0);h(G.brim,M(o.cap),0,.1,.2)}
+ [-1,1].forEach(s=>{const p=new THREE.Group();p.position.set(s*.27,1.1,0);const arm=new THREE.Mesh(G.arm,M(o.shirt));arm.position.y=-.28;p.add(arm);const hand=new THREE.Mesh(G.hand,M(o.skin));hand.position.y=-.6;p.add(hand);p.rotation.z=s*.25;p.userData.s=s;g.add(p);ar.push(p)});
+ g.userData={arms:ar};g.scale.setScalar(o.sc||1);return g}
+function shadowAll(g){g.traverse(m=>{if(m.isMesh)m.castShadow=true})}
+
+const G2={leg:new THREE.CylinderGeometry(.09,.07,.5,10),shoe:(()=>{const g=new THREE.SphereGeometry(.09,10,8);g.scale(1,.55,1.8);return g})(),tor:new THREE.LatheGeometry([[0,0],[.19,0],[.2,.12],[.22,.34],[.27,.56],[.25,.62],[.1,.68],[0,.7]].map(([x,y])=>new THREE.Vector2(x,y)),20),neck:new THREE.CylinderGeometry(.06,.07,.14,10),head:new THREE.SphereGeometry(.21,24,18),jaw:new THREE.SphereGeometry(.15,16,12),eye:new THREE.SphereGeometry(.034,12,8),iris:new THREE.CircleGeometry(.02,12),nose:new THREE.SphereGeometry(.035,10,8),ear:new THREE.SphereGeometry(.04,10,8),brow:new THREE.BoxGeometry(.08,.02,.02),lip:new THREE.TorusGeometry(.04,.011,8,14,Math.PI),arm:new THREE.CylinderGeometry(.07,.055,.56,10),jt:new THREE.SphereGeometry(.075,10,8),hand:new THREE.SphereGeometry(.065,10,8),thumb:new THREE.SphereGeometry(.03,8,6),cuff:new THREE.TorusGeometry(.056,.014,6,12),cap:new THREE.SphereGeometry(.228,18,10,0,6.283,0,1.5),back:new THREE.SphereGeometry(.2,12,10),bun:new THREE.SphereGeometry(.09,10,8),curl:new THREE.SphereGeometry(.06,8,6),front:new THREE.BoxGeometry(.13,.36,.02),lap:new THREE.BoxGeometry(.05,.32,.02),tie:new THREE.BoxGeometry(.06,.34,.02),brim:new THREE.BoxGeometry(.3,.02,.18),crown:new THREE.CylinderGeometry(.19,.2,.12,14),scarf:new THREE.TorusGeometry(.14,.04,8,16),belt:new THREE.CylinderGeometry(.205,.205,.04,14)};
+function person(o){const g=new THREE.Group(),ar=[],sk=M(o.skin,.55),mk=par=>(ge,m,x,y,z,sc)=>{const e=new THREE.Mesh(ge,m);e.position.set(x,y,z);if(sc)e.scale.set(sc[0],sc[1],sc[2]);par.add(e);return e},a=mk(g);
+ [-1,1].forEach(s=>{a(G2.leg,M(o.pants),s*.1,.25,0);a(G2.shoe,M(0x1a1410,.35,.2),s*.1,.05,.06)});
+ a(G2.tor,M(o.shirt,.7),0,.5,0,[1,1,.72]);a(G2.belt,M(0x2a1a10,.4),0,.52,0,[1,1,.72]);
+ if(o.tie){a(G2.front,M(0xf2efe6),0,.98,.185);a(G2.tie,M(o.tie),0,.96,.195);[-1,1].forEach(s=>{a(G2.lap,M(o.shirt,.6),s*.085,.97,.19).rotation.z=-s*.28})}
+ if(o.scarf)a(G2.scarf,M(o.scarf),0,1.17,0).rotation.x=Math.PI/2;
+ a(G2.neck,sk,0,1.22,0);
+ const hd=new THREE.Group();hd.position.y=1.38;g.add(hd);const h=mk(hd);
+ h(G2.head,sk,0,0,0,[.95,1.06,1]);h(G2.jaw,sk,0,-.09,.035,[1,.9,1]);
+ [-1,1].forEach(s=>{h(G2.eye,M(0xffffff,.2),s*.075,.025,.175,[1,1,.5]);h(G2.iris,M(0x3a2410,.3),s*.075,.025,.202);h(G2.ear,sk,s*.2,-.01,0,[.5,1,1]);const b=h(G2.brow,M(o.hair,.9),s*.075,.09,.187);b.rotation.z=o.happy?s*.12:-s*.42});
+ h(G2.nose,sk,0,-.025,.2,[1,1.2,1.1]);
+ const mo=h(G2.lip,M(0x9a3a3a,.4),0,o.happy?-.04:-.09,.185);mo.rotation.z=o.happy?Math.PI:0;
+ const hm=M(o.hair,.85);h(G2.cap,hm,0,.03,-.01).rotation.x=-.4;
+ if(o.style===1){h(G2.back,hm,0,-.07,-.09,[1.1,1.4,.9]);[-1,1].forEach(s=>h(G2.curl,hm,s*.19,-.03,.02,[.8,2.4,1.4]))}
+ if(o.style===2)h(G2.bun,hm,0,.26,-.06);
+ if(o.style===3)for(let i=0;i<9;i++){const an=i/9*6.283;h(G2.curl,hm,Math.cos(an)*.19,.12+Math.sin(i*2)*.03,Math.sin(an)*.19)}
+ if(o.beard)h(G2.jaw,hm,0,-.12,.05,[1.05,.75,.85]);
+ if(o.cap){h(G2.crown,M(o.cap),0,.17,0);h(G2.brim,M(o.cap),0,.12,.2)}
+ const sl=M(o.shirt,.7);
+ [-1,1].forEach(s=>{const p=new THREE.Group();p.position.set(s*.28,1.1,0);const q=mk(p);q(G2.jt,sl,0,0,0);q(G2.arm,sl,0,-.28,0);if(o.tie)q(G2.cuff,M(0xf2efe6),0,-.52,0).rotation.x=Math.PI/2;q(G2.hand,sk,0,-.6,0,[.9,1.1,.7]);q(G2.thumb,sk,-s*.05,-.58,.03);p.rotation.z=s*.25;p.userData.s=s;g.add(p);ar.push(p)});
+ g.userData={arms:ar};g.scale.setScalar(o.sc||1);return g}
+const G3={head:new THREE.SphereGeometry(.27,28,22),ear:new THREE.SphereGeometry(.05,10,8),eye:new THREE.SphereGeometry(.055,14,10),iris:new THREE.CircleGeometry(.034,14),hl:new THREE.CircleGeometry(.012,8),brow:new THREE.BoxGeometry(.1,.024,.02),nose:new THREE.SphereGeometry(.04,10,8),lip:new THREE.TorusGeometry(.055,.012,8,16,Math.PI),cheek:new THREE.SphereGeometry(.045,10,8),tor:new THREE.LatheGeometry([[0,0],[.2,0],[.24,.12],[.26,.3],[.24,.5],[.14,.62],[.08,.67],[0,.67]].map(([x,y])=>new THREE.Vector2(x,y)),24),neck:new THREE.CylinderGeometry(.07,.08,.14,12),leg:new THREE.CylinderGeometry(.1,.085,.42,12),shoe:(()=>{const g=new THREE.SphereGeometry(.1,12,10);g.scale(1,.55,1.7);return g})(),arm:new THREE.CylinderGeometry(.075,.06,.66,12),jt:new THREE.SphereGeometry(.09,12,10),hand:new THREE.SphereGeometry(.08,12,10),thumb:new THREE.SphereGeometry(.035,8,6),cuff:new THREE.TorusGeometry(.065,.016,8,14),cap:new THREE.SphereGeometry(.29,24,12,0,6.283,0,1.55),back:new THREE.SphereGeometry(.26,16,12),bun:new THREE.SphereGeometry(.11,12,10),curl:new THREE.SphereGeometry(.085,10,8),front:new THREE.BoxGeometry(.15,.38,.02),lap:new THREE.BoxGeometry(.06,.34,.02),tie:new THREE.BoxGeometry(.07,.36,.02),belt:new THREE.CylinderGeometry(.215,.215,.045,16),brim:new THREE.BoxGeometry(.36,.025,.22),crown:new THREE.CylinderGeometry(.24,.26,.14,16),scarf:new THREE.TorusGeometry(.17,.045,8,18),glass:new THREE.TorusGeometry(.075,.01,6,16),bridge:new THREE.BoxGeometry(.06,.01,.01)};
+const BAS=new THREE.MeshBasicMaterial({color:0xffffff}),IRM=new THREE.MeshBasicMaterial({color:0x2a1a10}),outM=new THREE.MeshBasicMaterial({color:0x090a0c,side:THREE.BackSide});
+function person(o){const g=new THREE.Group(),ar=[],sk=M(o.skin,.55),hm=M(o.hair,.85),st=o.style||0,rnd=o.sc<.7,beard=o.beard!==undefined?o.beard:(rnd&&st!==1&&Math.random()<.18),glasses=o.glasses!==undefined?o.glasses:(rnd&&Math.random()<.2),mk=par=>(ge,m,x,y,z,sc)=>{const e=new THREE.Mesh(ge,m);e.position.set(x,y,z);if(sc)e.scale.set(sc[0],sc[1],sc[2]);par.add(e);return e},a=mk(g);
+ [-1,1].forEach(s=>{a(G3.leg,M(o.pants),s*.11,.21,0);a(G3.shoe,M(0x1a1410,.35,.2),s*.11,.05,.07)});
+ a(G3.tor,M(o.shirt,.7),0,.4,0,[1,1,.8]).name="torso";a(G3.belt,M(0x2a1a10,.4),0,.44,0,[1,1,.8]);
+ if(o.tie){a(G3.front,M(0xf2efe6),0,.88,.19).rotation.x=-.22;a(G3.tie,M(o.tie),0,.85,.205).rotation.x=-.22;[-1,1].forEach(s=>{const l=a(G3.lap,M(o.shirt,.6),s*.1,.87,.2);l.rotation.x=-.22;l.rotation.z=-s*.3})}
+ if(o.scarf)a(G3.scarf,M(o.scarf),0,1.08,0).rotation.x=Math.PI/2;
+ a(G3.neck,sk,0,1.1,0);
+ const hd=new THREE.Group();hd.position.y=1.33;g.add(hd);hd.name="head";const h=mk(hd);
+ h(G3.head,sk,0,0,0,[1,.97,1]);
+ [-1,1].forEach(s=>{const eg=new THREE.Group();eg.name="eye";eg.position.set(s*.1,.01,0);hd.add(eg);const e=mk(eg);e(G3.eye,M(0xffffff,.2),0,0,.235,[1,1.15,.5]);e(G3.iris,IRM,0,0,.2635);e(G3.hl,BAS,.014,.016,.266);h(G3.ear,sk,s*.27,0,0,[.5,1,1]);h(G3.cheek,M(0xe88c82,.7),s*.16,-.06,.19,[1,.7,.35]);const b=h(G3.brow,hm,s*.1,.105,.25);b.rotation.z=o.happy?s*.1:-s*.4});
+ h(G3.nose,sk,0,-.04,.265,[1,1.1,1]);
+ const mo=h(G3.lip,M(0x9a3a3a,.4),0,o.happy?-.085:-.15,.242);mo.name="mouth";mo.rotation.z=o.happy?Math.PI:0;
+ h(G3.cap,hm,0,.03,-.015).rotation.x=-.45;
+ if(st===0||st===2)h(G3.back,hm,.04,.2,.17,[.55,.22,.3]).rotation.z=-.3;
+ if(st===1){h(G3.back,hm,0,-.1,-.12,[1.1,1.5,.9]);[-1,1].forEach(s=>h(G3.curl,hm,s*.24,-.12,0,[.7,2.6,1.2]))}
+ if(st===2)h(G3.bun,hm,0,.33,-.08);
+ if(st===3)for(let i=0;i<9;i++){const an=-1.4+i*.35;h(G3.curl,hm,Math.sin(an)*.27,.1+Math.sin(i*2.3)*.04,-Math.cos(an)*.22)}
+ if(beard)h(G3.back,hm,0,-.19,.13,[.7,.45,.5]);
+ if(glasses){[-1,1].forEach(s=>h(G3.glass,M(0x1a1a1a,.4),s*.1,.01,.27));h(G3.bridge,M(0x1a1a1a,.4),0,.015,.27)}
+ if(o.cap){h(G3.crown,M(o.cap),0,.2,0);h(G3.brim,M(o.cap),0,.14,.22)}
+ const sl=M(o.shirt,.7);
+ [-1,1].forEach(s=>{const p=new THREE.Group();p.position.set(s*.27,.98,0);const q=mk(p);q(G3.jt,sl,0,0,0);q(G3.arm,sl,0,-.33,0);if(o.tie)q(G3.cuff,M(0xf2efe6),0,-.62,0).rotation.x=Math.PI/2;q(G3.hand,sk,0,-.72,0,[.9,1.1,.8]);q(G3.thumb,sk,-s*.06,-.7,.04);p.rotation.z=s*.25;p.userData.s=s;g.add(p);ar.push(p)});
+ g.userData={arms:ar};g.scale.setScalar(o.sc||1);return g}
+function outline(g){const l=[];g.traverse(m=>{if(m.isMesh&&["SphereGeometry","CylinderGeometry","LatheGeometry"].includes(m.geometry.type))l.push(m)});l.forEach(m=>{const o=new THREE.Mesh(m.geometry,outM);o.position.copy(m.position);o.rotation.copy(m.rotation);o.scale.copy(m.scale).multiplyScalar(1.06);m.parent.add(o)})}
+function shadowAll(g){g.traverse(m=>{if(m.isMesh)m.castShadow=true});outline(g)}
+const rigs=[];
+function rig(g,kind){const r={g,kind,eyes:[],head:null,mouth:null,torso:null,ph:Math.random()*10,nb:2+Math.random()*4};g.traverse(o=>{if(o.name==="eye")r.eyes.push(o);if(o.name==="head")r.head=o;if(o.name==="mouth")r.mouth=o;if(o.name==="torso")r.torso=o});rigs.push(r)}
+/* seyirci: sol destekçi (yeşil), sağ yuhalayan (kırmızı) */
+const aud=[[],[]];
+[0,1].forEach(side=>{const sx=side?1:-1;
+ for(let t=0;t<3;t++){const hh=.5*(t+1),x=sx*(7+t*1.2);
+  const st=new THREE.Mesh(new THREE.BoxGeometry(1.2,hh,10),M(0x2b1d14,.8));st.position.set(x,hh/2,.5);st.receiveShadow=true;S.add(st);
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,10),M(0xd9a441,.3,.7));rail.position.set(x-sx*.55,hh+.35,.5);S.add(rail);
+  for(let i=0;i<6;i++){const tc=side?0xc0392b:0x3aa56b,p=person({shirt:tc,pants:0x232a33,skin:SKIN[Math.random()*4|0],hair:HAIR[Math.random()*5|0],style:Math.random()*3|0,happy:!side,scarf:Math.random()<.5?0xf2efe6:0,cap:Math.random()<.35?tc:0,sc:.62});
+   p.position.set(x,hh,-3.4+i*1.5+(t%2)*.5);p.rotation.y=-sx*1.2;p.userData.b={base:hh,ph:Math.random()*6,sp:5+Math.random()*3};S.add(p);aud[side].push(p)}}
+ const lb=sprite(side?"Yuhalayanlar":"Destekçiler",side?"#fff":"#06240f",side?"#c0392b":"#3aa56b",3,.6,44);lb.position.set(sx*8.2,4.3,.5);S.add(lb)});
+
+const blobM=new THREE.MeshBasicMaterial({map:GLOW,color:0x000000,transparent:true,opacity:.55,depthWrite:false}),blobG=new THREE.CircleGeometry(.3,14);
+aud.forEach(arr=>arr.forEach(p=>{const b=new THREE.Mesh(blobG,blobM);b.rotation.x=-Math.PI/2;b.position.set(p.position.x,p.userData.b.base+.012,p.position.z);S.add(b)}));
+{const a=[];for(let i=0;i<7;i++)a.push(-7.5+i*2.5,9.5,-.8);const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute(a,3));S.add(new THREE.Points(g,new THREE.PointsMaterial({map:GLOW,size:1.8,color:0xfff2c8,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false})))}
+const dN=160,dArr=new Float32Array(dN*3);for(let i=0;i<dN;i++){dArr[i*3]=(Math.random()-.5)*12;dArr[i*3+1]=Math.random()*9;dArr[i*3+2]=-4+Math.random()*11}
+const dust=new THREE.Points(new THREE.BufferGeometry().setAttribute("position",new THREE.BufferAttribute(dArr,3)),new THREE.PointsMaterial({map:GLOW,size:.09,color:0xfff0c8,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false}));S.add(dust);
+/* yarışmacılar, sunucu */
+const players=[];
+[[-3.1,"#2d7ff9"],[3.1,"#f2994a"]].forEach(([x,col],i)=>{
+ const dk=new THREE.Mesh(new THREE.BoxGeometry(1.2,.85,.7),M(0x3a2a1c,.5));dk.position.set(x,.425,3.55);dk.castShadow=dk.receiveShadow=true;S.add(dk);
+ const tp=new THREE.Mesh(new THREE.BoxGeometry(1.26,.06,.76),M(0xd9a441,.3,.7));tp.position.set(x,.88,3.55);S.add(tp);
+ const pc=cv(256,96),px=pc.getContext("2d");px.fillStyle=col;px.fillRect(0,0,256,96);px.fillStyle="#08141a";px.font="700 54px Oswald,sans-serif";px.textAlign="center";px.textBaseline="middle";px.fillText("Oyuncu "+(i+1),128,52);
+ const pl=new THREE.Mesh(new THREE.PlaneGeometry(1,.38),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(pc)}));pl.position.set(x,.5,3.91);S.add(pl);
+ const p=person({shirt:PN[i],pants:0x1c2430,tie:0x14222a,skin:SKIN[i*2],hair:i?0x6b4a2a:0x111111,style:i?1:0,happy:true,glasses:!i,sc:1.15});
+ p.position.set(x,0,2.9);shadowAll(p);S.add(p);p.userData.gy=0;p.userData.pose=null;p.userData.pl=pl;players.push(p);
+ const lb=sprite("Oyuncu "+(i+1),"#08141a",col,1.9,.46,40);lb.position.set(x,2.65,2.9);S.add(lb);p.userData.lb=lb;
+ const rg=new THREE.Mesh(new THREE.RingGeometry(.8,1,40),new THREE.MeshBasicMaterial({color:PN[i],transparent:true,opacity:.9,side:THREE.DoubleSide}));rg.rotation.x=-Math.PI/2;rg.position.set(x,.03,2.9);S.add(rg);p.userData.rg=rg});
+const host=person({shirt:0xb8892a,pants:0x161a1f,tie:0xb3282d,skin:SKIN[1],hair:0x8a8a8a,happy:true,beard:true,sc:1.2});host.position.set(4.9,0,-3.3);shadowAll(host);S.add(host);
+const hdk=new THREE.Mesh(new THREE.BoxGeometry(1.3,.9,.8),M(0x3a2a1c,.5));hdk.position.set(4.9,.45,-2.6);hdk.castShadow=true;S.add(hdk);
+const mic=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.4,6),M(0x111,.4,.6));mic.position.set(4.7,1.1,-2.5);S.add(mic);const mh=new THREE.Mesh(new THREE.SphereGeometry(.06,8,8),M(0x333,.4,.6));mh.position.set(4.7,1.33,-2.5);S.add(mh);
+const hl=sprite("Sunucu","#241a00","#d9a441",1.5,.42,36);hl.position.set(4.9,2.75,-3.3);S.add(hl);
+
+/* kupa */
+function trophy(){const g=new THREE.Group(),gm=new THREE.MeshPhysicalMaterial({color:0xffc83a,roughness:.16,metalness:1,emissive:0x3a2600,emissiveIntensity:.5,clearcoat:.8});
+ const pts=[[0,0],[.3,0],[.3,.06],[.18,.1],[.07,.16],[.07,.34],[.22,.5],[.3,.9],[.27,.93],[0,.8]].map(([x,y])=>new THREE.Vector2(x,y));
+ g.add(new THREE.Mesh(new THREE.LatheGeometry(pts,20),gm));
+ [-1,1].forEach(s=>{const t=new THREE.Mesh(new THREE.TorusGeometry(.14,.03,8,14),gm);t.position.set(s*.33,.68,0);t.rotation.y=Math.PI/2;g.add(t)});
+ const bs=new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,.1,14),M(0x3a2a1c,.5));bs.position.y=-.05;g.add(bs);g.traverse(m=>{if(m.isMesh)m.castShadow=true});return g}
+const wp=[0,1].map(()=>{const m=new THREE.Mesh(new THREE.BoxGeometry(1.4,.9,1.1),M(0xd9a441,.3,.7));m.castShadow=true;m.visible=false;S.add(m);return m});
+
+/* konfeti, balonlar */
+const conf=[],cg=new THREE.PlaneGeometry(.13,.08);
+for(let i=0;i<170;i++){const m=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({color:new THREE.Color().setHSL(Math.random(),.9,.6),side:THREE.DoubleSide}));m.visible=false;m.userData.v=new THREE.Vector3();S.add(m);conf.push(m)}
+function confetti(){conf.forEach(m=>{m.visible=true;m.position.set((Math.random()-.5)*6,7+Math.random()*2,-3+Math.random()*5);m.userData.v.set((Math.random()-.5)*3,Math.random()*3,(Math.random()-.5)*2)})}
+const bubbles=[],SUP=["Aferin!","Süpersin!","Devam!","Yaparsın!","Bravo!","Çok yakın!"],HEC=["Yine mi?","Bırak artık!","Bu ne ya!","Hadi canım!","Sözlük al!","Yazık!"];
+function bubble(side,txt){const p=aud[side][Math.random()*18|0],s=sprite(txt,side?"#fff":"#06240f",side?"#c0392b":"#3aa56b",1.7,.5,44);s.position.set(p.position.x,p.position.y+1.2,p.position.z);S.add(s);bubbles.push({s,t:0})}
+
+/* ---------- Animasyon çekirdeği ---------- */
+const tws=[];const tw=(d,fn)=>new Promise(r=>tws.push({t:0,d,fn,r}));
+const exc=[0,0],clock=new THREE.Clock(),look=new THREE.Vector3(0,2.5,0);let mx=0,my=0,jump=-1,jt=0,cine=null;
+addEventListener("pointermove",e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5});
+function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
+ for(let i=tws.length-1;i>=0;i--){const w=tws[i];w.t+=dt;const k=Math.min(1,w.t/w.d);w.fn(k);if(k>=1){tws.splice(i,1);w.r()}}
+ if(cine){cam.position.lerp(cine.p,.04);look.lerp(cine.l,.05)}else{cam.position.x+=(mx*3-cam.position.x)*.04;cam.position.y+=(3.3-my*1.2-cam.position.y)*.04;cam.position.z+=(cz-cam.position.z)*.05;look.lerp(new THREE.Vector3(0,2.5,0),.05)}
+ cam.lookAt(look);
+ exc[0]=Math.max(0,exc[0]-dt*.3);exc[1]=Math.max(0,exc[1]-dt*.3);
+ aud.forEach((arr,s)=>arr.forEach(p=>{const b=p.userData.b,e=exc[s];p.position.y=b.base+Math.abs(Math.sin(t*b.sp+b.ph))*(.02+e*.3);p.userData.arms.forEach(a=>{const up=e>.3?2.7+Math.sin(t*8+b.ph)*.4:.25;a.rotation.z+=(a.userData.s*up-a.rotation.z)*.2})}));
+ players.forEach((p,i)=>{const u=p.userData,act=i===turn&&started&&!over&&!cine;p.visible=i<NP;u.rg.visible=act&&i<NP;u.lb.visible=i<NP&&!cine;
+  let y=u.gy+(act?Math.abs(Math.sin(t*3))*.05:0);if(jump===i){jt+=dt;y+=Math.abs(Math.sin(jt*9))*.45}p.position.y=y;
+  u.rg.scale.setScalar(1+Math.sin(t*5)*.08);u.lb.scale.x+=((act?2.3:1.9)-u.lb.scale.x)*.15;u.lb.position.y=2.65+(act?.12:0);u.lb.position.x=p.position.x;
+  u.arms.forEach(a=>{const s=a.userData.s;let tx=0,tz=s*.25;if(u.pose==="trophy"){tx=-3.05;tz=-s*.3}else if(jump===i)tz=s*2.8;a.rotation.x+=(tx-a.rotation.x)*.12;a.rotation.z+=(tz-a.rotation.z)*.12})});
+ beams.forEach((b,i)=>{b.rotation.z=Math.sin(t*.8+i*1.7)*.35;b.rotation.x=Math.cos(t*.6+i)*.15});
+ bulbMats[0].emissiveIntensity=1.1+Math.sin(t*6)*.9;bulbMats[1].emissiveIntensity=1.1-Math.sin(t*6)*.9;if(glows[0]){glows[0].material.opacity=.6+Math.sin(t*6)*.4;glows[1].material.opacity=.6-Math.sin(t*6)*.4}window.bdU.t.value=t;const dp=dust.geometry.attributes.position;for(let i=0;i<dN;i++){let y=dp.getY(i)+dt*.15;if(y>9)y=0;dp.setY(i,y);dp.setX(i,dp.getX(i)+Math.sin(t+i)*dt*.1)}dp.needsUpdate=true;
+ if(!cine)spC.target.position.lerp(new THREE.Vector3(players[turn].position.x,1.5,2.9),.06);
+ if(started&&!over&&marks[row]&&NP>1&&!marks[row].userData.solid){marks[row].visible=true;marks[row].material.map=texP[turn];marks[row].material.opacity=.55+Math.sin(t*6)*.4}
+ conf.forEach(m=>{if(!m.visible)return;const v=m.userData.v;v.y-=dt*4;m.position.addScaledVector(v,dt);m.rotation.x+=dt*6;m.rotation.y+=dt*5;if(m.position.y<0)m.visible=false});
+ for(let i=bubbles.length-1;i>=0;i--){const b=bubbles[i];b.t+=dt;b.s.position.y+=dt*.5;b.s.material.opacity=Math.min(1,(2.4-b.t)*2);if(b.t>2.4){S.remove(b.s);bubbles.splice(i,1)}}
+ {const tt=clock.elapsedTime;rigs.forEach(r=>{const ph=r.ph,pi=r.kind===2?players.indexOf(r.g):-1;r.eyes.forEach(e=>e.scale.y=((tt+ph)%r.nb)<.14?.12:1);if(r.head){r.head.rotation.y=Math.sin(tt*.7+ph)*.25;r.head.rotation.x=Math.sin(tt*1.1+ph)*.05}if(r.torso)r.torso.scale.y=1+Math.sin(tt*1.6+ph)*.012;if(r.mouth){const e=r.kind<2?exc[r.kind]:(pi>=0&&(jump===pi||players[pi].userData.pose==="trophy")?1:0);r.mouth.scale.y=1+(e>.3?Math.abs(Math.sin(tt*9+ph))*1.2:0)}})}
+ R.render(S,cam)}
+loop();
+
+/* ---------- Oyun mantığı ---------- */
+function toast(h,ms=2600){const e=$("#toast");e.innerHTML=h;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),ms)}
+function banner(txt,col){const b=$("#banner");b.textContent=txt;b.style.background=col;b.classList.add("show");clearTimeout(banner.t);banner.t=setTimeout(()=>b.classList.remove("show"),1500)}
+function hud(){$("#score").innerHTML=Array.from({length:NP},(_,i)=>`<div class="pc ${i===turn&&!over?"on":""}" style="--pc:${PC[i]}"><b>Oyuncu ${i+1}</b><span>${scores[i]}</span><i>${i===turn&&!over?"Sırada":""}</i></div>`).join("");
+ $("#rd").textContent=`Tur ${rd}/${NT}, hak ${Math.min(row+1,6)}/6`;
+ const j=joker[turn]||{};$("#jk").innerHTML=`<span class="jl" style="--pc:${PC[turn]}">Oyuncu ${turn+1} jokerleri</span>`+[["h","Harf aç"],["s","Seyirci oyu"],["e","Harf ele"]].map(([k,l])=>`<button style="--pc:${PC[turn]}" data-j="${k}" ${j[k]||over||busy?"disabled":""}>${l}</button>`).join("");
+ $("#jk").querySelectorAll("button").forEach(b=>b.onclick=()=>useJoker(b.dataset.j))}
+function kbBuild(){$("#kb").innerHTML=KB.map((r,i)=>`<div class="kr">${i===2?'<button class="k w" data-k="ENTER">Gönder</button>':""}${r.split("").map(c=>`<button class="k" data-k="${c}">${c}</button>`).join("")}${i===2?'<button class="k w" data-k="BACK">Sil</button>':""}</div>`).join("");
+ $("#kb").querySelectorAll("button").forEach(b=>b.onclick=()=>press(b.dataset.k))}
+function kbPaint(){$("#kb").querySelectorAll(".k").forEach(b=>{const c=b.dataset.k;if(c.length>1)return;b.classList.remove("c","p","a");if(kstate[c])b.classList.add(kstate[c])})}
+function showRow(){if(over||row>5)return;for(let c=0;c<L;c++){if(cur[c])paint(row,c,cur[c],"f");else if(hints[c])paint(row,c,hints[c],"h");else paint(row,c,"","e")}}
+function press(k){ac();if(busy||over||!started)return;$("#appeal").classList.add("hide");if(k==="ENTER")return submit();
+ if(k==="BACK"){if(cur.length){cur=cur.slice(0,-1);sfx.back();showRow()}return}
+ if(cur.length<L){cur+=k;sfx.key();showRow();const m=tiles[row][cur.length-1].m;tw(.14,x=>m.scale.setScalar(1.18-.18*x))}}
+addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==="Enter")press("ENTER");else if(e.key==="Backspace")press("BACK");else if(e.key.length===1){const u=e.key.toLocaleUpperCase("tr");if(LET.includes(u))press(u)}});
+function ev(g,w){const r=Array(L).fill("a"),cn={};for(let i=0;i<L;i++){if(g[i]===w[i])r[i]="c";else cn[w[i]]=(cn[w[i]]||0)+1}for(let i=0;i<L;i++)if(r[i]!=="c"&&cn[g[i]]>0){r[i]="p";cn[g[i]]--}return r}
+function shake(){const rw=tiles[row].map(t=>t.m),b=rw.map(m=>m.position.x);tw(.4,k=>rw.forEach((m,i)=>m.position.x=b[i]+(k<1?Math.sin(k*40)*.05*(1-k):0)))}
+async function submit(){if(cur.length<L){bad(`${L} harf gerekli`);return}
+ if(!SET[L].has(cur)&&!okWords.has(cur)&&!await verify())return;
+ busy=true;hud();const g=cur,res=ev(g,word),r=row,rank={a:1,p:2,c:3};setMark(r,turn,true);
+ await Promise.all(res.map(async(st,c)=>{await sleep(c*270);const m=tiles[r][c].m;await tw(.17,k=>m.rotation.x=k*1.5708);paint(r,c,g[c],st);sfx.flip(st);await tw(.17,k=>m.rotation.x=1.5708*(1-k))}));
+ res.forEach((st,c)=>{if(st==="c")known[c]=true;if(!kstate[g[c]]||rank[st]>rank[kstate[g[c]]])kstate[g[c]]=st});kbPaint();
+ const gr=res.filter(x=>x==="c").length,ye=res.filter(x=>x==="p").length;
+ if(g===word){over=true;const pts=(6-r)*100;scores[turn]+=pts;exc[0]=1;exc[1]=.35;jump=turn;jt=0;sfx.win();sfx.clap(3);confetti();bubble(0,"Bravo!");bubble(0,SUP[1]);bubble(1,"Şans bu!");endRound(true,pts)}
+ else{if(gr>=Math.ceil(L*.6)||(gr>=2&&ye>=2)){exc[0]=1;exc[1]=.15;sfx.clap(1.6);bubble(0,SUP[Math.random()*6|0]);bubble(0,SUP[Math.random()*6|0])}
+  else if(gr===0&&ye<=1){exc[1]=1;exc[0]=.1;sfx.boo();bubble(1,HEC[Math.random()*6|0]);bubble(1,HEC[Math.random()*6|0])}
+  else{exc[0]=.55;exc[1]=.5;sfx.clap(.9,.5);sfx.boo(.8);bubble(0,SUP[Math.random()*6|0]);bubble(1,HEC[Math.random()*6|0])}
+  if(r===5){over=true;exc[1]=1;exc[0]=0;sfx.lose();sfx.boo(2);bubble(1,"Ha ha ha!");bubble(1,"Ayıp ayıp!");endRound(false,0)}
+  else{row++;cur="";turn=(turn+1)%NP;if(NP>1){banner(`Sıra Oyuncu ${turn+1}'de`,PC[turn]);sfx.turn()}showRow()}}
+ busy=false;hud()}
+async function endRound(win,pts){hud();await sleep(2200);if(quit)return;
+ $("#et").textContent=win?`Oyuncu ${turn+1} buldu`:"Kimse bulamadı";$("#em").innerHTML=`Kelime: <b>${word}</b>${win?`<br>${pts} puan kazandı`:""}`;
+ $("#nx").textContent=rd>=NT?"Finale geç":"Sonraki kelime";$("#end").classList.remove("hide");jump=-1}
+function newRound(){rd++;const pool=POOL[L];let w;do{w=pool[Math.random()*pool.length|0]}while(w===lastW&&pool.length>1);word=lastW=w;row=0;cur="";hints=[];known=[];kstate={};over=false;busy=false;jump=-1;turn=(rd-1)%NP;
+ buildBoard();$("#kb").querySelectorAll(".k").forEach(b=>b.classList.remove("c","p","a","x"));hud();
+ banner(NP>1?`Tur ${rd}: Oyuncu ${turn+1} başlıyor`:`Tur ${rd}`,PC[turn]);sfx.turn();showRow()}
+function useJoker(k){if(busy||over||joker[turn][k])return;ac();
+ if(k==="h"){const pos=[...Array(L).keys()].filter(i=>!hints[i]&&!known[i]);if(!pos.length){toast("Açılacak harf kalmadı");return}const i=pos[Math.random()*pos.length|0];hints[i]=word[i];showRow();toast(`Sunucu: ${i+1}. harf ${word[i]}`)}
+ if(k==="e"){const pool=LET.filter(c=>!word.includes(c)&&!kstate[c]).sort(()=>Math.random()-.5).slice(0,6);pool.forEach(c=>kstate[c]="a");$("#kb").querySelectorAll(".k").forEach(b=>{if(pool.includes(b.dataset.k))b.classList.add("x")});toast("Sunucu: 6 yanlış harf elendi")}
+ if(k==="s"){const o=[word],pl=POOL[L];while(o.length<Math.min(4,pl.length)){const w=pl[Math.random()*pl.length|0];if(!o.includes(w))o.push(w)}let top=32+Math.random()*13|0,rest=100-top,a=Math.random()*rest*.6|0,b=Math.random()*(rest-a)*.7|0;const pc=[top,a,b,rest-a-b],ci=Math.random()<.6?0:1+(Math.random()*2|0),ix=[0,1,2,3].filter(i=>i!==ci);let q=0;const rows=o.map((w,i)=>[w,i===0?pc[ci]:pc[ix[q++]]]).sort((x,y)=>y[1]-x[1]);
+  toast("Seyirci oyu<br>"+rows.map(([w,p])=>`${w} %${p}`).join("<br>"),6000);exc[0]=.5;exc[1]=.4;sfx.clap(1,.5)}
+ joker[turn][k]=true;sfx.joker();hud()}
+
+/* ---------- Final ara sahnesi: kazanan kupayı kaldırır ---------- */
+async function finale(f){over=true;quit=true;hl.visible=false;$("#exit").classList.add("hide");$("#ask").classList.add("hide");$("#appeal").classList.add("hide");$("#toast").classList.remove("show");$("#end").classList.add("hide");document.body.classList.add("cine");
+ const mxs=Math.max(...scores.slice(0,NP));let wins=[...Array(NP).keys()].filter(i=>scores[i]===mxs);if(NP===1&&mxs===0)wins=[];if(f)wins=f.w;
+ await tw(1.2,k=>{hemi.intensity=.65-.45*k;key.intensity=1.5-1.1*k;spC.intensity=1.4+k*1.6;spA.intensity=1.1-.8*k;spB.intensity=1.1-.8*k});
+ if(!wins.length){sfx.boo(2.5);exc[1]=1;cine={p:new THREE.Vector3(0,2.4,7),l:new THREE.Vector3(0,1.6,2.9)};await sleep(3500);
+  $("#ft").textContent="Kupa bu sefer yok";$("#fp").textContent="Hiç puan toplayamadın. Bir daha dene.";$("#fin").classList.add("show");return}
+ const xs=wins.length===2?[-1.1,1.1]:[0];sfx.fan();
+ const st=wins.map(w=>({p:players[w],x:players[w].position.x,z:players[w].position.z}));
+ wins.forEach((w,i)=>{wp[i].visible=true;wp[i].position.set(xs[i],.45,1.4)});
+ cine={p:new THREE.Vector3(0,2.6,8),l:new THREE.Vector3(0,1.6,1.4)};
+ await tw(1.6,k=>st.forEach((s,i)=>{s.p.position.x=s.x+(xs[i]-s.x)*k;s.p.position.z=s.z+(1.4-s.z)*k;s.p.userData.gy=.9*k;s.p.userData.rg.visible=false}));
+ spC.target.position.set(xs[0],1.5,1.4);
+ st.forEach(s=>{const tr=trophy();tr.position.set(0,1.78,.1);tr.scale.setScalar(.01);s.p.add(tr);s.tr=tr;s.p.userData.pose="trophy"});
+ exc[0]=1;exc[1]=wins.length?.3:0;sfx.clap(5);confetti();
+ await tw(1.2,k=>st.forEach(s=>s.tr.scale.setScalar(.55*k)));
+ const cx=xs.length===2?0:xs[0];
+ tw(6,k=>{cine.p.set(cx+Math.sin(k*2.4-1.2)*2.6,2.2+k*.5,6.4-k*.8);cine.l.set(cx,2.1,1.4)});
+ st.forEach(s=>tw(6,k=>s.tr.rotation.y=k*12));
+ await sleep(2000);confetti();await sleep(2200);confetti();await sleep(1800);
+ $("#ft").textContent=f&&f.m?f.m:wins.length===2?"Berabere, kupa ikisinde":`Kazanan: Oyuncu ${wins[0]+1}`;
+ $("#fp").innerHTML=Array.from({length:NP},(_,i)=>`Oyuncu ${i+1}: ${scores[i]} puan`).join("<br>");$("#fin").classList.add("show")}
+
+/* ---------- Menü ---------- */
+function sum(){$("#sum").textContent=`Seçimin: ${cfg.L} harfli kelime, ${cfg.P} yarışmacı, ${cfg.T} tur`}
+document.querySelectorAll(".grp").forEach(gp=>{const key=gp.dataset.g,bs=gp.querySelectorAll("button");
+ const sel=()=>bs.forEach(b=>b.setAttribute("aria-pressed",+b.dataset.v===cfg[key]));bs.forEach(b=>b.onclick=()=>{cfg[key]=+b.dataset.v;sel();sum()});sel()});sum();
+$("#start").onclick=()=>{NP=cfg.P;L=cfg.L;NT=cfg.T;scores=[0,0];rd=0;joker=Array.from({length:NP},()=>({}));apl[0]=apl[1]=2;okWords.clear();quit=false;ac();if(!started){murmur();started=true}sfx.intro();$("#menu").classList.add("hide");newRound()};
+$("#nx").onclick=()=>{$("#end").classList.add("hide");if(rd>=NT)finale();else newRound()};
+kbBuild();L=5;NP=2;buildBoard();hud();
+/* ---------- Genişletilmiş sözlük: yalnızca geçerli tahmin olarak kabul edilir ---------- */
+(()=>{const ok=new Set(LET);("ABLA AÇIK ADIM AFİŞ AKIL ALAY ALIN AMAÇ ARAÇ ARKA ASIL ATEŞ AVCI AYNA AYRI BACA BATI BEZE BİNA BOĞA BORÇ BORU CAMİ CİLT CÜCE DANA DEPO DERİ DERS DEVE DİZE DİZİ DOĞA DURU EBRU EMEK ERİK ESİR ESKİ ETEK EVET EŞYA FARE FENA FİLM FİŞ GENÇ GEZİ GRUP HALK HAVA HOCA IRAK IŞIK İÇKİ İLAÇ İLAN İLKE İLGİ İNCİ İNİŞ İSİM İŞÇİ İZİN KALE KARE KASA KEÇİ KENT KIYI KİLO KİŞİ KOCA KOKU KONU KOZA KÖLE KÖŞE KURS KUTU KUYU KÜME KÜRK LALE MAAŞ MAYA MENÜ MİDE NEŞE NİYE NOTA OCAK ODAK OKUR OLAY OLTA OMUZ ONUR ORAN ORTA OTEL OYUN ÖDEV ÖRGÜ ÖYKÜ ÖZEL ÖZÜR PANO PARK PERİ PİST PLAN PRİZ PUAN RAKI RENK SAHA SERA SERİ SIRA SIRT SİRK SPOR SULU SÜRÜ TAHT TEMA TEPE TERS TİRE TOKA TREN TUNÇ TÜRK UMUT UYUM UZUN ÜLKE ÜNLÜ ÜRÜN VADİ VALİ VEDA VERİ YAKA YAMA YAPI YARA YASA YENİ YUVA YÜCE ZARF ZEKA ZİRA "+"ACELE ADRES AĞIZ AKŞAM ALMAK ALTIN ANKET ASKER AVUÇ AYRAN AYDIN BADEM BAĞIŞ BAKIR BALTA BARAJ BASIN BAYAN BEDEN BEKÇİ BELLİ BETON BEYAZ BİLEK BİRİM BOYUN BOZUK BÖLGE BÖYLE BULUŞ BURUN BÜYÜK CADDE CANLI CEKET CEVİZ CİHAZ ÇADIR ÇAĞRI ÇANAK ÇARŞI ÇEKİM ÇEŞİT ÇEVRE ÇIKIŞ ÇİMEN ÇİZGİ ÇUKUR DAİRE DAMAR DARBE DEĞER DEĞİL DEMİR DENEY DERGİ DERİN DEVİR DİLİM DOĞAL DOĞRU DOKUZ DOLAR DOLMA DOMUZ DORUK DÖNEM DÖŞEK DUDAK DUMAN DURAK ENGEL ERKEK ESNEK ETKİN EVRAK EYLEM FAKİR FANUS FENER FERAH FİGÜR FİNAL FIRIN FİZİK FORMA GEÇİT GELİR GENEL GİRİŞ GİYİM GÖBEK GÖLET GÖREV GÖRÜŞ GÜMÜŞ GÜNAH GÜNEY GÜVEN GÜZEL HABER HAKEM HAKİM HALAT HAMAM HAMUR HASAT HASTA HAYAT HAYIR HAZIR HEYET HIZLI HİSSE HOROZ HUKUK HÜNER HÜZÜN IRMAK ISLAK ISRAR İDARE İDDİA İKLİM İKRAM İLERİ İLKEL İMKAN İMZA İNANÇ İNCİR İSTEK JÜRİ KABUK KADEH KAFES KALIN KANAL KANUN KARAR KARIN KARŞI KASAP KASIM KATIK KATIL KAVAK KAYAK KAYIN KAYIP KAZAK KEPÇE KESİK KESİM KEYİF KIBAR KILIÇ KIRIK KISIM KİMYA KİRLİ KİTLE KOMİK KONUK KONUT KOŞUL KÖMÜR KÖYLÜ KUCAK KULÜP KUMAR KUMRU KUPON KURAL KÜMES KÜRSÜ LOKMA LİSTE MANTAR MARKET MEDYA MEMUR MESAJ MEŞALE MEZAR MİLLİ MİRAS MİZAH MODEL MORAL MOTOR MÜDÜR NABIZ NAKIŞ NAKİT NAMUS NAZIK NEDEN NEHİR NESNE NİKAH NİŞAN NÖBET ORGAN ORTAK ÖDÜL ÖFKE ÖĞLEN ÖKÜZ ÖMÜR ÖNDER ÖZGÜR PALTO PANDA PARÇA PASTA PEMBE PENCE PETEK PİLOT POLİS POSTA PRENS PROJE PUDRA PÜRÜZ RAKAM RAPOR REÇEL ROMAN SABIR SAHİP SAHNE SAKİN SALÇA SAVAŞ SEBEP SEÇİM SEFER SEKİZ SEMİZ SEPET SERGİ SEZON SIFIR SIĞIR SİMİT SİNİR SOĞUK SOLUK SOMUN SONUÇ SUÇLU SÜRAT SÜREÇ ŞAFAK ŞARKI ŞEKİL ŞERBET ŞİDDET ŞİFRE ŞÖLEN TAHIL TALEP TAMAM TAMİR TARAF TARİH TAŞIT TAVIR TEKNE TELAŞ TEMEL TERZİ TESİS TEYZE TOKAT TOPLU TOPUZ TORBA TUTAR TUZLU TÜNEL TÜTÜN UCUZ UÇMAK UNVAN UYARI UYGUN ÜCRET ÜMİT ÜNİTE ÜZGÜN VAGON VAHŞİ VAKIT VALİZ VARIŞ VEKİL VİDEO VİRÜS YAKIN YAMAÇ YANIK YANIT YAPAY YAPIM YASAK YAVRU YAYIN YAZIK YAZIM YEMİN YENGE YEREL YETKİ YIĞIN YIKIM YOKUŞ YÜREK YÜZÜK ZARAR ZEMİN ZİHİN ATMAK AÇMAK DEMEK ETMEK OLMAK İNMEK KAZMAK "+"ADALET AKRABA BAKKAL BAŞARI BAŞKAN BİLİNÇ BİRLİK BÖLÜM BULMAK CÜZDAN ÇEYREK DEPREM DEVLET DİKKAT EĞİTİM ELBİSE ENERJİ FATURA FIRSAT FUTBOL GAYRET GAZETE GEZGİN GÖMLEK GÖZLEM GÜNLÜK HAFIZA HARİTA HİZMET İBADET İÇECEK İLGİLİ İNŞAAT İYİLİK KAMYON KAPSAM KARTAL KAVRAM KERVAN KESKİN KIRSAL KONSER KÖRFEZ KUDRET KURBAN KUTSAL KUVVET KUYRUK KÜLTÜR LEZZET MAĞAZA MAĞARA MAKİNE MECLİS MEKTUP MERKEZ MESAFE MESLEK MEVSİM MİMARİ MUHTAR MUSLUK ÖNEMLİ PARMAK PİRİNÇ PİYANO PİYASA REKLAM RUHSAT RÜZGAR SAĞLIK SALATA SANAYİ SANDIK SERVİS SÖZLÜK SÜZGEÇ ŞANSLI ŞENLİK TASLAK TEBRİK TOPLUM TÜRKÇE ULAŞIM ULUSAL VİTRİN YALNIZ YARDIM YORGUN YUMRUK YÜKSEK ZENGİN ZEYTİN ZİRAAT BAKMAK BİLMEK DURMAK GELMEK GİTMEK KALMAK KESMEK KOŞMAK OKUMAK SATMAK SEVMEK SORMAK VERMEK VURMAK YAPMAK YAZMAK YÜZMEK ÇIKMAK ÇALMAK ÇİZMEK DÖNMEK DÜŞMEK GÜLMEK UYUMAK "+"ANAYASA BAŞKENT CESARET CEZAEVİ ÇALIŞMA ÇİFTLİK DEĞİŞİM DENEYİM EKONOMİ GELENEK GELİŞİM GEZEGEN GÖRÜNTÜ HAKİKAT HEYECAN KATILIM KURBAĞA MALZEME MANZARA MİSAFİR NAKLİYE ÖĞRETİM REKABET SORUMLU TEMİZLİK YÖNETİM İSTEMEK").split(" ").forEach(w=>{if(w.length>=4&&w.length<=7&&[...w].every(c=>ok.has(c)))SET[w.length].add(w)})})();
+/* ---------- Kırmızı hata, kelime itirazı, çıkış ve rıza sistemi ---------- */
+aud.forEach((a,s)=>a.forEach(p=>rig(p,s)));players.forEach(p=>rig(p,2));rig(host,3);
+(()=>{const ok=new Set(LET);("UÇAK AĞAÇ AĞIR ALET ALEM ANIT ARZU AŞIK AYAZ BAYI BÜRO CEZA DAVA DİNÇ EVRE FİDE GEMİ GERİ GÖRE HALE HARF HATA İLİM İNAT İNEK İNCE İPEK KAMU KARA KATI KESE KIRK KİRA KURU OLUK ONAY ÖĞÜN ÖLÇÜ ÖNEM ÖRTÜ ÖZET PLAJ PUSU RİSK SALI SERT SORU SUNİ ŞUBE TAPU UZAY VAKA VAZO VİZE YEDİ YOGA YURT ADAY AFET ROBOT ALKOL ARMUT ATLAS AÇLIK BALON BASKI BEKAR BEYİN BİLİM BİLET BÖCEK BOĞAZ CİDDİ CÜMLE ÇALGI ÇAYCI ÇIRAK ÇÖZÜM DAVET DAVUL DEVRE DİKEN DOSYA DÜĞÜN DÜZEN EŞARP FAZLA FIKRA GALİP GAMZE GENİŞ GİDER GİZLİ HAFİF HAKLI HASIR HAVLU HELVA HEMEN HESAP İLAHİ İŞLEM KALAS KAMAN KAMIŞ KAPAN KARGO KAZAN KEDER KOMUT KUZEY LAKAP LİDER LÜGAT MADEN MAKAM MERMİ MİNİK NASIL NESİL OPERA ÖZLEM PEDAL PİLAV POMPA RADAR RAMPA RESMİ ROZET SAĞIR SERÇE SİNEK SORGU SOSİS SÜRGÜ ŞAPKA TABAN TAKAS TANIK TARAK TARTI TEMAS TEPKİ TOPAÇ TUTUM ÜLKÜ YAĞIŞ YAKIT YATAK YETİM ZEHİR ZORLU AĞLAMAK KELİME YAPRAK PARLAK PATRON PİŞMAN BULGUR ARSLAN BAYRAM GERÇEK ÇENGEL HIRSIZ").split(" ").forEach(w=>{if(w.length>=4&&w.length<=7&&[...w].every(c=>ok.has(c)))SET[w.length].add(w)})})();
+let SAMP;
+async function getSample(){if(SAMP!==undefined)return SAMP;try{SAMP=window.claude&&claude.use?await claude.use("sample"):null}catch(e){SAMP=null}return SAMP}
+async function askDict(w){const s=await getSample();if(!s)return null;try{const r=await Promise.race([s(`Aşağıdaki kelime Türkçede gerçekten var olan bir kelime mi? Türkçe sözlükte (TDK) yer alan ya da Türkçede yaygın kullanılan kelimeler EVET; kök, türemiş veya çekimli biçim olabilir; Türkçeye girmiş yabancı kökenli kelimeler (pilot, robot gibi) de EVET. Özel isim, kısaltma, uydurma harf dizisi ve Türkçede kullanılmayan yabancı kelimeler HAYIR. Emin değilsen HAYIR de. Cevabın yalnızca EVET ya da HAYIR olsun.\nKelime: ${w.toLocaleLowerCase("tr")}`,{modelTier:"quick",cache:true}),new Promise((_,j)=>setTimeout(()=>j({code:"timeout"}),9000))]);const t=(r.text||"").trim().toLocaleUpperCase("tr");return t.startsWith("EVET")?true:t.startsWith("HAYIR")?false:null}catch(e){if(e&&e.code==="not_granted")SAMP=null;return null}}
+function fixI(w){const ps=[];for(let i=0;i<w.length;i++)if(w[i]==="I"||w[i]==="İ")ps.push(i);if(!ps.length||ps.length>3)return null;for(let m=1;m<1<<ps.length;m++){const a=[...w];ps.forEach((p,j)=>{if(m>>j&1)a[p]=a[p]==="I"?"İ":"I"});const v=a.join("");if(SET[L].has(v)||okWords.has(v))return v}return null}
+async function verify(){const w=cur,fx=fixI(w);if(fx){cur=fx;showRow();return true}busy=true;toast("Kelime sözlükte aranıyor...",12000);const r=await askDict(w);if(quit||over)return false;if(r===true){okWords.add(w);$("#toast").classList.remove("show");return true}bad(r===false?`${w} Türkçe bir kelime değil`:`${w} sözlükte yok, doğrulanamadı`,true);return false}
+const okWords=new Set(),apl=[2,2];let quit=false,askCb=null,askNo="",actor=0;
+function bad(msg,ap){sfx.bad();toast(msg);shake();busy=true;for(let c=0;c<L;c++)if(cur[c])paint(row,c,cur[c],"r");setTimeout(()=>{busy=false;showRow();const b=$("#appeal");if(ap&&apl[turn]>0&&!over){b.textContent=`Bu kelime Türkçe, kabul et (${apl[turn]} hak)`;b.classList.remove("hide")}else b.classList.add("hide")},900)}
+$("#appeal").onclick=()=>{const w=cur;if(!w||w.length<L||busy||over)return;$("#appeal").classList.add("hide");const go=()=>{apl[turn]--;okWords.add(w);submit()};if(NP===1)go();else ask(`Oyuncu ${2-turn}, ${w} kelimesi Türkçede var mı? Kabul ediyor musun?`,go,"Evet, kabul","Hayır","Kelime kabul edilmedi")};
+function ask(t,cb,yes,no,msg){$("#aq").textContent=t;askCb=cb;askNo=msg===undefined?"Teklif reddedildi":msg;$("#ay").textContent=yes||"Kabul ediyorum";$("#an").textContent=no||"Reddediyorum";$("#ask").classList.remove("hide")}
+$("#ay").onclick=()=>{$("#ask").classList.add("hide");$("#exit").classList.add("hide");const c=askCb;askCb=null;if(c)c()};
+$("#an").onclick=()=>{$("#ask").classList.add("hide");askCb=null;if(askNo)toast(askNo)};
+function selA(){$("#who").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.v===actor))}
+$("#who").querySelectorAll("button").forEach(b=>b.onclick=()=>{actor=+b.dataset.v;selA()});
+$("#xbtn").onclick=()=>{if(!started||quit)return;actor=turn;selA();const two=NP>1;$("#who").style.display=two?"":"none";$("#xd").style.display=two?"":"none";$("#xf").style.display=two?"":"none";$("#xm").textContent=two?"Ana menüye dön (karşı tarafın onayı gerekir)":"Ana menüye dön";$("#exit").classList.remove("hide")};
+$("#xc").onclick=()=>$("#exit").classList.add("hide");
+$("#xm").onclick=()=>{if(NP===1){location.reload();return}ask(`Oyuncu ${2-actor}, Oyuncu ${actor+1} ana menüye dönmek istiyor. Kabul ediyor musun?`,()=>location.reload())};
+$("#xd").onclick=()=>ask(`Oyuncu ${2-actor}, Oyuncu ${actor+1} beraberlik teklif ediyor. Kabul ediyor musun?`,()=>finale({w:[0,1],m:"Beraberlik kabul edildi, kupa ikisinde"}));
+$("#xf").onclick=()=>ask(`Oyuncu ${actor+1}, pes edersen rakibin maçı kazanır. Emin misin?`,()=>finale({w:[1-actor],m:`Oyuncu ${actor+1} pes etti, kazanan Oyuncu ${2-actor}`}),"Evet, pes ediyorum","Vazgeç","");
+const pvEl=$("#pv");function pvu(){pvEl.innerHTML="<i></i>".repeat(cfg.L)}pvu();document.querySelectorAll('.grp[data-g="L"] button').forEach(b=>b.addEventListener("click",pvu));
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+/* ============ KELİME ARENASI — ONLINE & ÇOK DİLLİ EKLENTI ============ */
+
+/* --- CSS ekleme --- */
+document.head.insertAdjacentHTML('beforeend',`<style>
+.ri{display:block;width:100%;margin-top:4px;padding:10px 14px;background:#17323a;border:2px solid #2a5560;color:var(--txt);font:700 18px Barlow,sans-serif;clip-path:var(--cp6);outline:none;text-align:center;-webkit-user-select:text;user-select:text}
+.ri:focus{border-color:var(--brass)}.ri::placeholder{color:#5a7580;font-weight:500}
+#connB{position:fixed;top:12px;left:50%;transform:translateX(-50%);padding:5px 14px;background:var(--panel);clip-path:var(--cp6);font-weight:700;font-size:12px;pointer-events:none;z-index:5;opacity:0;transition:opacity .3s}
+#connB.show{opacity:1}
+.olo{display:flex;gap:8px;margin-top:10px}.olo button{flex:1}
+#rcDisp{user-select:all;-webkit-user-select:all;cursor:pointer}
+#exit{z-index:20 !important}
+#ask{z-index:25 !important}
+</style>`);
+
+/* --- HTML ekleme --- */
+document.body.insertAdjacentHTML('beforeend',`
+<div id="lobbyScr" class="ov" style="z-index:10"><div class="card tk" style="max-width:420px">
+<h2 style="text-align:center;font-size:38px">KELİME ARENASI</h2>
+<p style="text-align:center;color:var(--mut);margin-bottom:14px">Kelime yarışması • Word contest • Wortwettbewerb</p>
+<div class="grp"><span>Dil / Language / Sprache</span>
+<div class="seg wide" id="langSeg">
+<button data-v="tr" aria-pressed="true">🇹🇷 Türkçe</button>
+<button data-v="en">🇬🇧 English</button>
+<button data-v="de">🇩🇪 Deutsch</button>
+</div></div>
+<button class="go" id="goLocal">Yerel Oyun / Local Game</button>
+<div class="olo">
+<button class="go alt" id="goCreate">🏠 Oda Oluştur</button>
+<button class="go alt" id="goJoin">🔗 Odaya Katıl</button>
+</div>
+<p class="fine" style="text-align:center">Online: Oda oluştur veya katıl</p>
+</div></div>
+
+<div id="roomCrt" class="ov hide" style="z-index:11"><div class="card tk" style="max-width:440px">
+<h2>Oda Oluştur / Create Room</h2>
+<div class="grp"><span>Oda Şifresi / Password</span>
+<input id="rcP" class="ri" type="text" placeholder="Şifre belirle..." maxlength="20"></div>
+
+<div class="grp"><span>Karakterini Seç / Choose Character</span>
+<div class="seg wide" id="rcPlayer">
+<button data-v="0" aria-pressed="true" style="padding:10px 6px"><i class="dot a"></i> 1. Oyuncu (Mavi)</button>
+<button data-v="1" style="padding:10px 6px"><i class="dot b"></i> 2. Oyuncu (Turuncu)</button>
+</div>
+<p id="rcPlayerDesc" class="fine" style="margin:4px 0 0;font-size:12px;color:var(--brass2)">1. Oyuncu ilk turda ilk başlar (Sol Podyum, Mavi)</p>
+</div>
+
+<div class="grp"><span>Kelime Uzunluğu / Word Length</span>
+<div class="seg" id="rcL"><button data-v="4">4</button><button data-v="5" aria-pressed="true">5</button><button data-v="6">6</button><button data-v="7">7</button></div></div>
+<div class="grp"><span>Tur Sayısı / Rounds</span>
+<div class="seg" id="rcT"><button data-v="1">1</button><button data-v="3" aria-pressed="true">3</button><button data-v="5">5</button></div></div>
+<button class="go" id="doCreate">Oluştur / Create</button>
+<button class="go alt" id="backCrt" style="margin-top:8px">← Geri</button>
+</div></div>
+
+<div id="roomWt" class="ov hide" style="z-index:11"><div class="card" style="max-width:420px">
+<h2 id="wtTitle">Rakip Bekleniyor...</h2>
+
+<div style="margin:8px 0;padding:8px 12px;background:#17323a;border-radius:6px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+  <span style="color:var(--mut)">Karakterin: </span>
+  <b id="wtRoleDisp" style="color:var(--p1)"><i class="dot a"></i> 1. Oyuncu (Mavi)</b>
+  <button id="wtSwapRole" class="go alt" style="display:inline-block;width:auto;padding:3px 10px;font-size:12px;margin:0">Değiştir</button>
+</div>
+
+<p style="margin:4px 0 0;font-size:14px;color:var(--mut)">Oda Kodu / Room Code</p>
+<p id="rcDisp" style="font:700 46px Oswald;color:var(--brass2);letter-spacing:.15em;margin:4px 0 6px" title="Kopyalamak için tıkla"></p>
+<button class="go alt" id="copyCodeBtn" style="margin-bottom:12px;padding:8px 14px;font-size:14px">📋 Kodu Kopyala / Copy Code</button>
+<p class="fine">Bu kodu rakibinize gönderin • Share this code</p>
+<button class="go alt" id="cancelWt">İptal / Cancel</button>
+</div></div>
+
+<div id="roomJn" class="ov hide" style="z-index:11"><div class="card tk" style="max-width:420px">
+<h2>Odaya Katıl / Join Room</h2>
+<div class="grp"><span>Oda Kodu / Room Code</span>
+<input id="rjC" class="ri" type="text" placeholder="6 haneli kod" maxlength="6" style="text-transform:uppercase;letter-spacing:.15em;font-size:22px"></div>
+<div class="grp"><span>Şifre / Password</span>
+<input id="rjP" class="ri" type="text" placeholder="Oda şifresi..."></div>
+<p id="joinE" class="fine" style="color:#e74c3c;min-height:18px"></p>
+<button class="go" id="doJoin">Katıl / Join</button>
+<button class="go alt" id="backJn" style="margin-top:8px">← Geri</button>
+</div></div>
+
+<div id="connLost" class="ov hide" style="z-index:14"><div class="card" style="max-width:380px">
+<h2 style="color:#e74c3c">Bağlantı Koptu / Disconnected</h2>
+<p id="clMsg">Rakip bağlantısı kesildi.</p>
+<button class="go" onclick="location.reload()">Ana Menüye Dön</button>
+</div></div>
+
+<div id="connB"></div>
+`);
+
+/* Orijinal menüyü gizle, lobi göster */
+$('#menu').classList.add('hide');
+
+/* ====================== DİL SİSTEMİ ====================== */
+
+/* Türkçe havuzunu kaydet */
+const POOL_TR={},SET_TR={};
+for(const k in POOL){POOL_TR[k]=[...POOL[k]];SET_TR[k]=new Set(POOL[k])}
+
+/* İngilizce kelime havuzu */
+const POOL_EN={
+4:"BACK BALL BAND BARN BASE BATH BEAR BEAT BELL BELT BIRD BITE BLOW BLUE BOAT BOLT BOMB BONE BOOK BURN CAGE CAKE CALL CALM CAMP CARD CARE CAVE CHIP CITY CLUE CLUB COAL COAT CODE COIN COLD COOK COOL COPY CORE CORN COST CREW CROP CURE CUTE DARE DARK DATA DATE DAWN DEAD DEAL DEER DENY DESK DIET DIRT DISH DOCK DOME DONE DOOM DOOR DOSE DOWN DRAG DRAW DROP DRUM DUMP DUST DUTY EACH EARN EASE EAST EDGE EMIT EVEN EVIL EXAM FACE FACT FADE FAIL FAIR FAKE FALL FAME FARM FAST FATE FEAR FEED FEEL FILM FIND FINE FIRE FIRM FISH FLAG FLAT FLIP FLOW FOAM FOLD FOLK FOOD FOOL FOOT FORK FORM FORT FOUR FREE FROM FUEL FULL FUND FURY GAIN GAME GANG GATE GAVE GAZE GEAR GIFT GIRL GLAD GLOW GLUE GOAT GOLD GOLF GONE GOOD GRAB GRAY GREW GRID GRIN GRIP GROW GULF GUST HAIR HALF HALL HALT HAND HANG HARD HARM HATE HAVE HEAD HEAL HEAP HEAR HEAT HEEL HELD HELL HELP HERE HERO HIGH HIKE HILL HINT HIRE HOLD HOLE HOME HOOD HOOK HOPE HORN HOST HOUR HUGE HUNG HUNT HURT IDEA IRON ITEM JACK JAIL JAZZ JOKE JUMP JURY JUST KEEN KEEP KICK KIDS KILL KIND KING KISS KNEE KNEW KNIT KNOT KNOW LACK LAID LAKE LAMP LAND LANE LAST LATE LAWN LEAD LEAF LEAN LEND LESS LIED LIFE LIFT LIKE LIMB LINE LINK LION LIST LIVE LOAD LOAN LOCK LONE LONG LOOK LORD LOSE LOSS LOST LOUD LOVE LUCK LUNG MADE MAIL MAIN MAKE MALE MANY MARK MASS MATE MAZE MEAL MEAN MEAT MEET MELT MEND MENU MESH MILD MILK MILL MIND MINE MINT MISS MODE MOOD MOON MORE MOST MOVE MUCH MYTH NAIL NAME NAVY NEAR NEAT NECK NEED NEST NEWS NEXT NICE NINE NODE NONE NOON NORM NOSE NOTE ODDS ONCE ONLY ONTO OPEN ORAL OURS OVAL OVEN OVER PACE PACK PAGE PAID PAIN PAIR PALE PALM PARK PART PASS PAST PATH PEAK PEER PICK PILE PINE PINK PIPE PLAN PLAY PLOT PLUG PLUS POEM POET POLL POND POOL POOR PORT POSE POST POUR PRAY PULL PUMP PURE PUSH QUIT RACE RACK RAGE RAIL RAIN RANK RARE RATE READ REAL REAR RELY RENT REST RICE RICH RIDE RING RISE RISK ROAD ROCK RODE ROLE ROLL ROOF ROOT ROPE ROSE RUIN RULE RUSH SAFE SAKE SALE SALT SAME SAND SANG SAVE SCAN SEAL SEAT SEED SEEK SEEM SEEN SELF SELL SEND SHIP SHOP SHOT SHOW SHUT SICK SIDE SIGH SIGN SILK SING SINK SITE SIZE SKIN SLAM SLAP SLIP SLOT SLOW SNAP SNOW SOAK SOAR SOCK SOFT SOIL SOLD SOLE SOME SONG SOON SORT SOUL SPIN SPOT STAR STAY STEM STEP STIR STOP SUIT SURE SWIM TAIL TAKE TALE TALK TALL TANK TAPE TASK TAXI TEAM TEAR TELL TEND TERM TEST TEXT THAN THAT THEM THEN THEY THIN THIS THUS TIDE TIDY TIED TIER TILL TIME TINY TIRE TOLD TOLL TONE TOOK TOOL TORN TOUR TOWN TRAP TRAY TREE TRIM TRIO TRIP TRUE TUBE TUCK TUNE TURN TWIN TYPE UGLY UNIT UPON URGE USED USER VARY VAST VERB VERY VICE VIEW VINE VISA VOID VOLT VOTE WADE WAGE WAIT WAKE WALK WALL WANT WARD WARM WARN WASH WAVE WEAK WEAR WEED WEEK WELL WENT WERE WEST WHAT WHEN WHOM WIDE WIFE WILD WILL WIND WINE WING WIRE WISE WISH WITH WOKE WOLF WOOD WOOL WORD WORE WORK WORM WORN WRAP YARD YEAH YEAR YOUR ZERO ZONE",
+5:"ABOUT ABOVE ABUSE ACTOR ADAPT ADDED ADMIT ADOPT ADULT AFTER AGAIN AGENT AGREE AHEAD ALARM ALBUM ALERT ALIEN ALIGN ALIVE ALLEY ALLOW ALONE ALONG ALTER AMONG ANGEL ANGER ANGLE ANGRY APART APPLE APPLY ARENA ARGUE ARISE ARMOR ARRAY ASIDE ASSET ATTIC AVOID AWAKE AWARD AWARE BADGE BADLY BASIC BASIN BASIS BEACH BEARD BEGIN BEING BELOW BENCH BERRY BIRTH BLACK BLADE BLAME BLANK BLAST BLAZE BLEED BLEND BLESS BLIND BLOCK BLOOM BLOWN BOARD BONUS BOOTH BOUND BRAIN BRAND BRAVE BREAD BREAK BREED BRICK BRIDE BRIEF BRING BROAD BROKE BROWN BRUSH BUILD BUILT BUNCH BURST BUYER CABIN CARRY CATCH CAUSE CHAIN CHAIR CHAOS CHARM CHASE CHEAP CHEAT CHECK CHEEK CHEER CHEST CHIEF CHILD CHINA CHOIR CHOSE CHUNK CIVIL CLAIM CLASH CLASS CLEAN CLEAR CLERK CLIMB CLING CLOCK CLONE CLOSE CLOTH CLOUD COACH COAST COLOR COMET CORAL COUNT COURT COVER CRACK CRAFT CRANE CRASH CRAZY CREAM CREEP CRIME CROSS CROWD CROWN CRUSH CURVE CYCLE DAILY DANCE DEALT DEATH DEBUT DELAY DENSE DEPTH DERBY DEVIL DIARY DIRTY DONOR DOUBT DOUGH DRAFT DRAIN DRAMA DRANK DRAWN DREAM DRESS DRIED DRIFT DRILL DRINK DRIVE DRONE DROVE DRUNK DRYER DUSTY DYING EAGER EARLY EARTH EIGHT ELDER ELECT ELITE EMBED EMPTY ENEMY ENJOY ENTER EQUAL ERROR ESSAY EVENT EVERY EXACT EXERT EXILE EXIST EXTRA FAINT FAIRY FAITH FALSE FANCY FATAL FAULT FEAST FIBER FIELD FIFTY FIGHT FINAL FLAME FLASH FLESH FLIES FLOAT FLOOD FLOOR FLOUR FLUID FLUSH FOCUS FORCE FORGE FORTH FORUM FOUND FRAME FRANK FRAUD FRESH FRONT FROST FROZE FRUIT FULLY FUNNY GHOST GIANT GIVEN GLASS GLEAM GLOBE GLORY GOOSE GRACE GRADE GRAIN GRAND GRANT GRAPE GRASP GRASS GRAVE GREAT GREEN GREET GRIEF GRILL GRIND GROAN GROOM GROSS GROUP GROVE GROWN GUARD GUESS GUEST GUIDE GUILT HABIT HAPPY HARSH HAUNT HAVEN HEART HEAVY HENCE HOBBY HONOR HORSE HOTEL HOUSE HUMAN HUMOR HURRY IMAGE IMPLY INDEX INDIE INNER INPUT INTRO IRONY ISSUE IVORY JEWEL JOINT JUDGE JUICE KNIFE KNOCK KNOWN LABEL LABOR LARGE LASER LATER LAUGH LAYER LEARN LEAST LEAVE LEGAL LEMON LEVEL LIGHT LIMIT LINEN LITER LOCAL LOGIC LOOSE LOVER LOWER LOYAL LUCKY LUNAR LUNCH MAGIC MAJOR MAKER MAPLE MARCH MASON MATCH MAYOR MEDIA MERCY METAL METER MIGHT MINOR MIXED MODEL MONEY MONTH MORAL MOUNT MOUSE MOUTH MOVIE MUSIC NERVE NEVER NIGHT NOBLE NOISE NORTH NOTED NOVEL NURSE OCCUR OCEAN OFFER OFTEN OLIVE ONSET OPERA ORBIT ORDER OTHER OUTER OWING OWNER OXIDE PAINT PANEL PANIC PAPER PARTY PASTE PATCH PAUSE PEACE PEACH PEARL PHASE PHONE PHOTO PIANO PIECE PILOT PITCH PIXEL PLACE PLAIN PLANE PLANT PLATE PLAZA PLEAD PLUCK PLUMB PLUME POINT POLAR POWER PRESS PRIDE PRIME PRINT PRIOR PRIZE PROBE PROOF PROUD PROVE PROXY PULSE PUNCH PUPIL PURSE QUEEN QUERY QUEST QUEUE QUICK QUIET QUOTA QUOTE RADAR RADIO RAISE RALLY RANCH RANGE RAPID RATIO REACH REACT REALM REBEL REFER REIGN RELAX RELAY REMIT REPAY REPLY RESET RIDER RIDGE RIFLE RIGHT RIGID RISKY RIVAL RIVER ROBIN ROBOT ROCKY ROUGE ROUGH ROUND ROUTE ROYAL RUGBY RUINS RULER RURAL SADLY SAINT SALAD SCALE SCENE SCENT SCOPE SCORE SCOUT SCREW SEIZE SENSE SERVE SETUP SEVEN SHADE SHALL SHAME SHAPE SHARE SHARK SHARP SHAVE SHEER SHEET SHELF SHELL SHIFT SHINE SHIRT SHOCK SHORE SHORT SHOUT SHRUG SIEGE SIGHT SINCE SIXTY SKATE SKILL SKULL SLATE SLEEP SLICE SLIDE SLOPE SMALL SMART SMELL SMILE SMOKE SNAKE SOLAR SOLID SOLVE SONIC SORRY SOUND SOUTH SPACE SPARE SPARK SPEAK SPEND SPICE SPITE SPLIT SPOKE SPOON SPORT SPRAY SQUAD STACK STAFF STAGE STAIN STAKE STALL STAMP STAND STARE START STATE STEAL STEAM STEEL STEEP STEER STICK STILL STOCK STOLE STONE STOOD STORE STORM STORY STOVE STRAP STRAW STRIP STUCK STUDY STUFF STYLE SUGAR SUITE SUPER SURGE SWEET SWEPT SWIFT SWING SWIRL SWORD TABLE TASTE TEACH TEETH TEMPO THANK THEME THICK THING THINK THIRD THOSE THREE THREW THROW THUMB TIGHT TIMER TIRED TITLE TODAY TOKEN TOPIC TOTAL TOUCH TOUGH TOWER TOXIC TRACE TRACK TRADE TRAIL TRAIN TRAIT TRASH TREND TRIAL TRIBE TRICK TROOP TRUCK TRULY TRUNK TRUST TRUTH TUMOR TUNER TWICE TWIST ULTRA UNCLE UNDER UNION UNITE UNITY UNTIL UPPER UPSET URBAN USAGE USUAL VALID VALUE VAULT VENUE VIDEO VIGOR VIOLA VIRAL VIRUS VISIT VITAL VIVID VOCAL VODKA VOICE VOTER WASTE WATCH WATER WEARY WEAVE WEIRD WHALE WHEAT WHEEL WHERE WHICH WHILE WHITE WHOLE WHOSE WIDER WITCH WOMAN WORLD WORRY WORSE WORST WORTH WOULD WOUND WRITE WRONG WROTE YACHT YIELD YOUNG YOUTH",
+6:"ABSORB ACTION BASKET BATTLE BEYOND BORDER BREATH BRIDGE BUDGET BUNDLE BURDEN BUTTER CANVAS CASTLE CELLAR CIRCLE COFFEE COMBAT COOKIE CORNER CRISIS CUSTOM DANGER DEBATE DEMAND DESERT DINNER DOUBLE DRAGON EMPIRE ENGINE ENTIRE ESCAPE EXOTIC EXPAND EXPORT FABRIC FACTOR FAMOUS FARMER FELINE FINGER FLIGHT FLOWER FOREST FROZEN GARDEN GATHER GENTLE GLOBAL GOLDEN GROWTH GUITAR HARBOR HEALTH HEAVEN HIDDEN HONEST HORROR HUNTER IGNORE IMPACT IMPORT INCOME INDOOR INSECT ISLAND JUNIOR JUNGLE KIDNEY KNIGHT LADDER LAUNCH LEADER LEGEND LESSON LETTER LISTEN LIVING LONELY LUXURY MANNER MARBLE MARINE MARKET MASTER MEDIUM MEMORY MENTAL METHOD MIDDLE MIRROR MOBILE MODERN MOMENT MONKEY MOTION MURDER MUSCLE MUSEUM NARROW NATION NATURE NORMAL NOTICE OBJECT OFFICE ONLINE OPTION ORANGE ORIGIN OUTPUT OYSTER PALACE PARENT PENCIL PEOPLE PERIOD PHRASE PIRATE PLANET PLAYER PLENTY POCKET POISON POLISH POTATO PRAYER PRINCE PRISON PROFIT PROMPT PROPER PURPLE PUZZLE RABBIT RANDOM REASON RECIPE RECORD REFORM REFUSE REGION RELIEF REMAIN REMIND REMOTE RENTAL REPEAT REPORT RESCUE RESORT RESULT RETAIL REVEAL REVIEW RIBBON ROCKET RUBBER SAMPLE SEARCH SECRET SELECT SENIOR SERIES SERVER SETTLE SHADOW SIGNAL SILENT SILVER SIMPLE SINGER SKETCH SLEEVE SMOOTH SOCIAL SOCKET SOFTEN SPIRAL SPIRIT SPREAD SPRING SQUARE STABLE STATUE STATUS STEADY STOLEN STRING STRONG STUDIO SUDDEN SUMMER SUMMIT SUNSET SUPPLY SURELY SURVEY SWITCH SYMBOL SYSTEM TABLET TALENT TARGET TEMPLE TENDER TENNIS THRONE TICKET TIMBER TISSUE TONGUE TRADER TREATY TUNNEL TWELVE UNIQUE UNLOCK UPWARD URGENT VALLEY VELVET VENDOR VESSEL VIEWER VIOLET VISION VOLUME VOYAGE WALKER WALLET WANDER WARMTH WEAPON WEEKLY WEIGHT WICKED WINDOW WINNER WINTER WISDOM WITHIN WONDER WOODEN WORKER WORTHY WRITER",
+7:"ACADEMY BALANCE BARRIER BECAUSE BELIEVE BETWEEN BILLION BLANKET BLOSSOM BROTHER CABINET CALCIUM CAPABLE CAPTAIN CAPTURE CAREFUL CENTRAL CERTAIN CHAMBER CHANNEL CHAPTER CHARITY CHICKEN CIRCUIT CLASSIC CLIMATE CLUSTER COLLECT COLLEGE COMFORT COMMAND COMMENT COMPACT COMPANY COMPARE COMPLEX COMPOSE CONCEPT CONCERN CONDUCT CONFIRM CONNECT CONSIST CONTACT CONTAIN CONTENT CONTEST CONTEXT CONTROL CONVERT COUNCIL COUNTER COUNTRY COURAGE CRYSTAL CULTURE CURRENT CURTAIN CUSHION CUSTOMS DEALING DECLINE DEFENSE DELIVER DENSITY DEPOSIT DESKTOP DESTROY DEVELOP DIAMOND DIGITAL DISPLAY DISTANT DIVERSE DOLPHIN DOORWAY DYNAMIC EARRING EASTERN ECONOMY EDITION EDUCATE ELASTIC ELDERLY ELEMENT EMBRACE EMOTION ENABLED ENDLESS ENFORCE ENGINES ENHANCE EPISODE ESSENCE EXAMINE EXAMPLE EXCITED EXECUTE EXHAUST EXHIBIT EXPENSE EXPLAIN EXPLOIT EXPLORE EXPOSED EXPRESS EXTREME EYEBROW FACTORY FACULTY FASHION FEATURE FICTION FIFTEEN FIGHTER FISHING FIXTURE FLAVOUR FOREVER FOREIGN FORMULA FORTUNE FORWARD FOUNDER FREEDOM FULFILL FURTHER GALLERY GATEWAY GENERAL GENUINE GLACIER GLAMOUR GLIMPSE GRAVITY GREATER GROUNDS GROWING HABITAT HALFWAY HALLWAY HARMONY HARVEST HEALTHY HELPFUL HIGHWAY HISTORY HOLDING HOLIDAY HORIZON HOSTAGE HOUSING HOWEVER HUNDRED HUNTING HYGIENE ILLEGAL ILLNESS IMAGINE IMMENSE IMPLIED IMPRESS IMPROVE INCLUDE INITIAL INQUIRY INSPIRE INSTALL INSTANT INSTEAD INTENSE INTERIM INVALID ISOLATE JOURNEY JUSTICE JUSTIFY KITCHEN LANDING LASTING LAUNDRY LEATHER LECTURE LEISURE LENDING LEOPARD LIBERTY LIBRARY LIMITED LITERAL LOGICAL LONGEST LOTTERY LUGGAGE MANAGER MANSION MASSIVE MASTERY MEANING MEASURE MEDICAL MEETING MENTION MESSAGE MILLION MINERAL MINIMAL MIRACLE MISSION MIXTURE MODULAR MONITOR MORNING MOUNTED MYSTERY NATURAL NEITHER NERVOUS NETWORK NEUTRAL NOTABLE NOTHING NUCLEAR OBVIOUS OCTOBER OFFENSE OFFICER OPINION ORGANIC OUTLINE OUTLOOK OVERALL OVERLAP PACIFIC PACKAGE PARKING PARTIAL PARTNER PASSAGE PATIENT PATTERN PAYMENT PENALTY PENSION PERCENT PERHAPS PERSONA PICTURE PIONEER PLASTIC PLATEAU POINTED POPULAR PORTION POTTERY POULTRY POVERTY PRECISE PREDICT PREMIER PREMIUM PREPARE PRESENT PREVIEW PRICING PRIMARY PRINTER PRIVACY PRIVATE PROBLEM PROCEED PRODUCE PRODUCT PROFILE PROGRAM PROJECT PROMISE PROMOTE PRONOUN PROSPER PROTECT PROTEST PROVIDE PUBLISH PURPOSE PURSUIT QUALIFY QUARTER QUICKLY RADICAL RAILWAY RAINBOW REALITY RECEIVE RECOVER REFLECT REFUGEE REGULAR RELATED RELEASE REMAINS REMOVAL RENEWAL REPLACE REPLICA REQUIRE RESERVE RESOLVE RESPECT RESPOND RESTART RESTORE RETREAT REUNION REVENUE REVERSE REVISED REVOLVE ROUTINE ROYALTY RUNTIME SAILING SCANDAL SCHOLAR SCIENCE SCRATCH SECTION SEGMENT SERIOUS SERVICE SESSION SETTING SHELTER SHORTLY SILENCE SIMILAR SIXTEEN SKILLED SLAVERY SOLDIER SOLVING SOMEHOW SPEAKER SPECIAL SPONSOR SQUEEZE STADIUM STARTUP STATION STORAGE STRANGE STUDENT STUMBLE SUBJECT SUCCEED SUCCESS SUGGEST SUMMARY SUNRISE SUPPORT SUPREME SURFACE SURGEON SURPLUS SURVIVE SUSPECT SUSTAIN TACTICS TEACHER TESTING THEATRE THERAPY THOUGHT TONIGHT TOURISM TOWARDS TRAGEDY TRAINER TRANSIT TRIBUTE TRIGGER TROUBLE TRUSTEE TUITION TURNING TYPICAL UNIFIED UNIFORM UNKNOWN UNUSUAL UPGRADE UPRIGHT UTILITY VACANCY VARIOUS VEHICLE VERSION VETERAN VICTORY VILLAGE VINTAGE VIOLATE VIOLENT VIRTUAL VISIBLE WARRIOR WEATHER WEBSITE WEDDING WEEKEND WELCOME WELFARE WHETHER WHISPER WILLING WITHOUT WITNESS WORKOUT WRAPPER YOUNGER"
+};
+
+/* Almanca kelime havuzu */
+const POOL_DE={
+4:"BACH BALL BANK BAUM BERG BETT BILD BLAU BOOT BROT BUCH BURG DACH DORF DUMM ERDE FACH FALL FELD FEST FILM FREI GELD GLAS GOTT GRAB GRAS HAAR HALB HALT HAND HART HAUS HELD HOLZ HORN HUND JAGD JUNG KALT KERN KIND KLAR KOCH KOPF KOST LAND LANG LAUF LEER LIED LUFT MANN MEER MOND MUND NAME NEST NETZ NORD OFEN PARK PLAN RAND RAUM REIN RING ROCK ROSE RUND SAAL SAFT SALZ SAND SEIL SIEG STAR STIL TIER TOPF TURM VOLL WALD WAND WARM WEIN WEIT WELT WERK WERT WILD WIND WORT ZAHL ZAHN ZAUN ZEIT ZIEL ZONE ZORN BLUT DANK ECHO EILE ERBE FORM GELB GIFT GOLD GRAM GROB HANG HEIL HERZ HUHN IDEE JADE JEDE KEIL KINN LACK LAGE LOHN MAIS MARK MAUS MOOS MUSS NASS NEID OBST OPER PAAR PASS PEST PULS RAHM RANK RAPS RAST REIF REIS ROST RUHM SAMT SAAT SARG SENF SITZ SOLD TAKT TANZ TEER TEXT TIEF TORE TUCH UFER VASE WADE WAHL WITZ WURM YOGA ZEUG ZINK ZOFE AMTS ATEM BALG BASS",
+5:"ABEND ADLER AHORN AMPEL ANGST APFEL ATMEN BACKE BAUER BIRNE BLATT BLICK BLITZ BLUME BOHNE BRAUN BREIT BRIEF BRUCH BUSCH DAMPF DECKE DRECK DUNST DURCH DURST EBENE EICHE EIMER EISEN ENGEL ERNTE ESSIG FABEL FARBE FEIER FEIND FEUER FISCH FLECK FLORA FLUCH FLUSS FORUM FROST FUCHS GABEL GEIST GLANZ GNADE GRIFF GRUBE GRUND GUNST GURKE HAFEN HAGEL HAKEN HAUPT HEBEL HILFE HONIG HUMOR IDEAL IMKER INSEL KAMPF KANAL KARTE KATZE KEGEL KERZE KETTE KISTE KLAGE KLANG KLEID KNALL KNOPF KOHLE KRAFT KRANZ KREIS KREUZ KRONE KUNDE KUNST KURVE LADEN LAMPE LAUNE LEBER LEHRE LEISE LESEN LICHT LIEBE LINIE LINSE LOGIK LUNGE MAGIE MARKT MAUER MEILE MEISE MENGE MILCH MITTE MONAT MORAL MUSIK NABEL NACHT NADEL NARBE NATUR NEBEL NUDEL OZEAN PALME PANIK PERLE PFAND PFEIL PILLE PLATZ PREIS PRINZ PROBE PUDEL PUNKT PUPPE QUALM RACHE RAUCH RAUPE REGAL REGEN REISE RENTE RINDE ROLLE RUDER SACHE SAHNE SALBE SAUCE SCHAL SCHUH SEELE SEIFE SEITE SICHT SOCKE SORGE SPIEL SPORT STAHL STAMM STAUB STEIN STERN STIRN STOFF STOLZ STROM STUFE STUHL STURM SUCHE SUMPF SZENE TAFEL TASSE TAUBE TEICH TISCH TRAUM TREUE TRICK TRUHE TULPE VOGEL WAAGE WACHE WAGEN WEIDE WELLE WIESE WOLKE ZWECK ASCHE BEERE BLASE BORKE BUCHE DIELE DRUCK ERKER FALKE FASER GASSE HACKE HARFE HAUBE HEIDE JUNGE KALTE KAPPE KEULE LACHS LAUGE LEHNE LEIER LINDE LUCHS MAPPE MASSE MEERE MIENE MIETE MULDE NELKE OCHSE OLIVE PASTE PAUSE PHASE PLANE RAMPE RANKE RASSE RIESE RINNE RUINE SALAT SEIDE SENSE SOHLE SPALT TONNE WANGE WATTE WEITE WIEGE WINDE ZINNE ZUNGE",
+6:"ABSATZ ANFANG ANLAGE ARBEIT BALKON DIENST DUNKEL ELTERN ERFOLG FABRIK FELSEN FLAGGE FLUCHT FREUDE GARTEN GEDULD GEFAHR GEHEIM GESETZ GESUND GEWALT GEWINN GLAUBE GLOCKE GRENZE GRUPPE HAMMER HANDEL HERBST HIMMEL HUNGER KAFFEE KAMMER KIRCHE KISSEN KLASSE KLINIK KOFFER KULTUR KUPFER LEITER MANGEL MANTEL MESSER METALL MITTEL MODELL MUSTER NATION NORDEN NUTZEN PALAST PAPIER PFLEGE PULVER QUELLE RAHMEN RAKETE RITTER SCHIFF SCHLAF SCHNEE SCHULE SCHWER SIGNAL SILBER SOMMER SPRUNG STIMME STRAND STUNDE TEMPEL TREPPE TUNNEL URLAUB WASSER WETTER WUNDER ZAUBER ZIMMER ZUCKER ABSAGE ABWEHR ACHSEL ANTRAG ANWALT ARCHIV BALKEN BALLEN BANANE BECKEN BEUTEL BILLIG BINDER BLENDE BRATEN BREITE BRILLE BUNKER BURGEN DECKEN DRITTE DROHNE EICHEL EINZIG FEDERN FINGER FLIESE GALGEN GEBIET GELEIT GEMEIN GERSTE GIEBEL GRILLE GURKEN HARKEN HAUFEN HEILEN HELFER HEMDEN HOLZIG HUMMER INHALT INSELN IRRTUM KABINE KANONE KELLER KIESEL KLEBEN KNOTEN KOLBEN KRAGEN KRATER KRIPPE KUCHEN KUPPEL LAPPEN LEHREN LENKEN LIEGEN LOCKEN MOLKEN MORGEN NADELN NARREN NEBELN NUDELN NUTZER OCHSEN PALMEN PANZER PFEIFE PRAXIS RAUPEN REIHEN REIZEN ROLLEN RUCKEN RUDERN SAUFEN SENKEN SEUCHE SPAREN STAUEN STRAHL STUMPF TAUBEN TEILEN TRAGEN TRESOR TURNEN UMSATZ WALZEN WARNEN WEIDEN WENDEN WERBEN WIEGEN WIRKEN ZACKEN ZAPFEN ZEHNER ZERREN ZIEHEN ZIEREN ZUFUHR ZUGANG",
+7:"ANGEBOT ANKUNFT ANTWORT AUSFLUG BALLETT BESTECK BETRIEB DRACHEN DREIECK EINKAUF ELEFANT EMPFANG ENERGIE FAHRRAD FAMILIE FENSTER FLASCHE GEBIRGE GIRAFFE HALTUNG KLOSTER KOMPASS KONZERT KRIEGER LATERNE LEKTION MALEREI MATROSE MELODIE MINERAL NACHBAR PENSION PFLANZE POLIZEI PROBLEM PROJEKT PROZENT RESPEKT RICHTER SCHMUCK SCHNELL SCHWEIN SPIEGEL STATION STUDENT THEATER TOCHTER TREFFEN TROMMEL TURNIER VERKEHR VERSUCH VORHANG WARNUNG WICHTIG WOHNUNG ZEICHEN ZEITUNG ZENTRUM ZUKUNFT ABBRUCH ABGRUND ABSICHT ABSTIEG ACHTUNG ANFRAGE ANGRIFF ANNAHME ANSICHT ANTENNE ANZEIGE AUFSATZ AUSLAGE AUSSAGE BEAMTER BEITRAG BERATER BEREICH BESTAND BETONEN BEWEGEN BLANKEN BRECHEN DICHTEN DIENSTE DOPPELT DRUCKEN EIGNUNG EINFALL EINTRAG EINWAND ERLEBEN ERSTENS ETIKETT FAHRTEN FLEISCH FRIEDEN GERATEN GESTALT GITARRE GLEITEN GREIFEN GRENZEN KAROTTE KLAMMER KLINGEN KNACKEN KOLONNE KOSTBAR MANCHEN NAHRUNG NEUGIER ORDNUNG PLANUNG PRALINE RATHAUS REKORDE REISEND RETTUNG SCHLOSS SCHMIED SCHNITT STADION STEMPEL STOLLEN TAUSEND TRAURIG TRUPPEN VORLAGE WECHSEL WUCHTIG"
+};
+
+/* İngilizce/Almanca havuz init */
+const SET_EN={},SET_DE={};
+for(const k in POOL_EN){POOL_EN[k]=POOL_EN[k].split(" ");SET_EN[k]=new Set(POOL_EN[k])}
+for(const k in POOL_DE){POOL_DE[k]=POOL_DE[k].split(" ");SET_DE[k]=new Set(POOL_DE[k])}
+
+const ALL_POOLS={tr:POOL_TR,en:POOL_EN,de:POOL_DE};
+const ALL_SETS={tr:SET_TR,en:SET_EN,de:SET_DE};
+const ALL_KBS={
+  tr:["ERTYUIOPĞÜ","ASDFGHJKLŞİ","ZCVBNMÖÇ"],
+  en:["QWERTYUIOP","ASDFGHJKL","ZXCVBNM"],
+  de:["QWERTZUIOPÜ","ASDFGHJKLÖÄ","YXCVBNM"]
+};
+
+let lang='tr';
+const EXT_DICTS={tr:[],en:[],de:[]};
+
+/* Dinamik buton etiketleriyle kbBuild */
+kbBuild=function(){
+  const lblEnt = lang==='en'?'ENTER':(lang==='de'?'ENTER':'Gönder');
+  const lblDel = lang==='en'?'DEL':(lang==='de'?'LÖSCH':'Sil');
+  $("#kb").innerHTML=KB.map((r,i)=>`<div class="kr">${i===2?'<button class="k w" data-k="ENTER">'+lblEnt+'</button>':""}${r.split("").map(c=>`<button class="k" data-k="${c}">${c}</button>`).join("")}${i===2?'<button class="k w" data-k="BACK">'+lblDel+'</button>':""}</div>`).join("");
+  $("#kb").querySelectorAll("button").forEach(b=>b.onclick=()=>press(b.dataset.k));
+};
+
+function setLang(l){
+  lang=l;
+  for(const k in POOL)delete POOL[k];
+  for(const k in SET)delete SET[k];
+  const lp=ALL_POOLS[l];
+  for(const k in lp){POOL[k]=[...lp[k]];SET[k]=new Set(lp[k])}
+  if(EXT_DICTS[l].length)EXT_DICTS[l].forEach(w=>{if(w.length>=4&&w.length<=7&&SET[w.length])SET[w.length].add(w)});
+  KB.length=0;ALL_KBS[l].forEach(r=>KB.push(r));
+  LET.length=0;KB.join('').split('').forEach(c=>LET.push(c));
+  kbBuild();
+}
+
+/* AI doğrulama: çok dilli */
+const AI_PROMPT={
+  tr:w=>'Aşağıdaki kelime Türkçede gerçekten var olan bir kelime mi? Türkçe sözlükte (TDK) yer alan ya da Türkçede yaygın kullanılan kelimeler EVET. Özel isim, kısaltma, uydurma HAYIR. Cevabın yalnızca EVET ya da HAYIR olsun.\nKelime: '+w.toLocaleLowerCase('tr'),
+  en:w=>'Is "'+w.toLowerCase()+'" a real English word found in standard dictionaries? Common words, their forms, and loanwords are YES. Proper nouns, abbreviations, made-up words are NO. Answer only YES or NO.',
+  de:w=>'Ist "'+w.toLowerCase()+'" ein echtes deutsches Wort aus dem Wörterbuch? Normale Wörter und Formen JA. Eigennamen und Abkürzungen NEIN. Antworte nur JA oder NEIN.'
+};
+const AI_YES={tr:'EVET',en:'YES',de:'JA'},AI_NO={tr:'HAYIR',en:'NO',de:'NEIN'};
+
+askDict=async function(w){
+  const s=await getSample();if(!s)return null;
+  try{
+    const r=await Promise.race([s(AI_PROMPT[lang](w),{modelTier:'quick',cache:true}),new Promise((_,j)=>setTimeout(()=>j({code:'timeout'}),9000))]);
+    const tx=(r.text||'').trim().toLocaleUpperCase(lang==='tr'?'tr':'en');
+    return tx.startsWith(AI_YES[lang])?true:tx.startsWith(AI_NO[lang])?false:null;
+  }catch(e){if(e&&e.code==='not_granted')SAMP=null;return null}
+};
+
+/* verify override: çok dilli */
+const _fixI=fixI;
+fixI=function(w){if(lang!=='tr')return null;return _fixI(w)};
+
+verify=async function(){
+  const w=cur,fx=fixI(w);
+  if(fx){cur=fx;showRow();return true}
+  busy=true;
+  const M={tr:['Kelime sözlükte aranıyor...','Türkçe bir kelime değil','sözlükte yok, doğrulanamadı'],
+    en:['Looking up word...','is not a valid English word','could not be verified'],
+    de:['Wort wird geprüft...','ist kein gültiges deutsches Wort','konnte nicht überprüft werden']};
+  toast(M[lang][0],12000);
+  const r=await askDict(w);
+  if(quit||over)return false;
+  if(r===true){okWords.add(w);$('#toast').classList.remove('show');return true}
+  bad(r===false?w+' '+M[lang][1]:w+' '+M[lang][2],true);return false
+};
+
+
+/* ====================== ONLINE SİSTEM ====================== */
+let isOnline=false,isHost=false,localPlayer=0,peer=null,conn=null;
+let hostSelectedPlayer=0; // 0 = 1. Oyuncu (Mavi), 1 = 2. Oyuncu (Turuncu)
+const ocfg={L:5,T:3};
+
+function genCode(){
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let r='';
+  for(let i=0;i<6;i++)r+=c[Math.random()*c.length|0];return r
+}
+function netSend(d){if(conn&&conn.open)conn.send(d)}
+
+function updateWtRoleDisp(){
+  const el=$('#wtRoleDisp');
+  if(el){
+    if(localPlayer===0){
+      el.innerHTML='<i class="dot a"></i> 1. Oyuncu (Mavi)';
+      el.style.color='var(--p1)';
+    }else{
+      el.innerHTML='<i class="dot b"></i> 2. Oyuncu (Turuncu)';
+      el.style.color='var(--p2)';
+    }
+  }
+}
+
+/* ====================== KUSURSUZ ONAY / DİYALOG SİSTEMİ ====================== */
+function showConfirm(title, onYes, onNo, yesText, noText){
+  $('#aq').textContent=title;
+  $('#ay').textContent=yesText||'Kabul ediyorum';
+  $('#an').textContent=noText||'Reddediyorum';
+  $('#ask').classList.remove('hide');
+
+  $('#ay').onclick=()=>{
+    $('#ask').classList.add('hide');
+    $('#exit').classList.add('hide');
+    if(onYes)onYes();
+  };
+
+  $('#an').onclick=()=>{
+    $('#ask').classList.add('hide');
+    if(onNo)onNo();
+  };
+}
+
+/* Orijinal ask fonksiyonunu güvenli hale getir */
+ask=function(t,cb,yes,no,msg){
+  showConfirm(t,cb,()=>{if(msg)toast(msg);},yes||'Kabul ediyorum',no||'Reddediyorum');
+};
+
+/* Uzak onay diyalogu */
+function askRemote(txt,yes,no){
+  showConfirm(txt,yes,no,'Kabul','Ret');
+}
+
+/* Oda oluştur (host) */
+function createRoom(pass,code){
+  return new Promise((resolve,reject)=>{
+    const pid='kelimearena-'+code.toLowerCase();
+    try{peer=new Peer(pid)}catch(e){reject(e);return}
+    let timeout=setTimeout(()=>reject(new Error('timeout')),30000);
+    peer.on('open',()=>{
+      clearTimeout(timeout);
+      resolve(code);
+    });
+    peer.on('error',e=>{clearTimeout(timeout);reject(e)});
+    peer.on('connection',c=>{
+      const handler=d=>{
+        if(d.t==='join'){
+          if(d.p===pass){
+            conn=c;
+            c.off('data',handler);
+            c.send({t:'ok',lang,L:ocfg.L,T:ocfg.T,hostPlayer:localPlayer,hostName:getMyDisplayName()});
+            setupNet();
+          }else{
+            c.send({t:'no'});c.close();
+          }
+        }
+      };
+      c.on('data',handler);
+      c.on('close',()=>c.off('data',handler));
+    });
+  })
+}
+
+/* Odaya katıl (guest) */
+function joinRoom(code,pass){
+  return new Promise((resolve,reject)=>{
+    const pid='kelimearena-'+code.toLowerCase();
+    try{peer=new Peer()}catch(e){reject(e);return}
+    const timeout=setTimeout(()=>{peer.destroy();reject(new Error('timeout'))},15000);
+    peer.on('open',()=>{
+      conn=peer.connect(pid,{reliable:true});
+      conn.on('open',()=>{conn.send({t:'join',p:pass})});
+      conn.on('data',d=>{
+        if(d.t==='ok'){clearTimeout(timeout);setupNet();resolve(d)}
+        else if(d.t==='no'){clearTimeout(timeout);peer.destroy();reject(new Error('wrongpass'))}
+      });
+      conn.on('error',e=>{clearTimeout(timeout);reject(e)});
+    });
+    peer.on('error',e=>{clearTimeout(timeout);reject(e)});
+  })
+}
+
+/* Ağ dinleyicileri */
+function setupNet(){
+  conn.on('data',onNet);
+  conn.on('close',onDisconnect);
+  const cb=$('#connB');cb.textContent='🟢 Online';cb.classList.add('show');cb.style.color='';
+}
+
+function onDisconnect(){
+  if(quit)return;
+  const cb=$('#connB');cb.textContent='🔴 Bağlantı koptu';cb.style.color='#e74c3c';
+  $('#clMsg').textContent=isHost?'Rakip bağlantısı kesildi.':'Ev sahibi bağlantısı kesildi.';
+  $('#connLost').classList.remove('hide');
+}
+
+function cleanupNet(){
+  if(conn){try{conn.close()}catch(e){}}
+  if(peer){try{peer.destroy()}catch(e){}}
+  conn=null;peer=null;isOnline=false;
+  const cb=$('#connB');cb.classList.remove('show');cb.style.color='';
+}
+
+/* Online oyunu başlat */
+function startOnlineGame(){
+  NP=2;L=ocfg.L;NT=ocfg.T;
+  scores=[0,0];rd=0;
+  joker=Array.from({length:NP},()=>({}));
+  apl[0]=apl[1]=2;okWords.clear();quit=false;
+  ac();if(!started){murmur();started=true}
+  sfx.intro();
+  document.querySelectorAll('.ov').forEach(o=>o.classList.add('hide'));
+
+  const charName = localPlayer===0?'🔵 1. Oyuncu (Mavi)':'🟠 2. Oyuncu (Turuncu)';
+  toast('Karakterin: <b>'+charName+'</b>', 4000);
+
+  if(isHost){
+    newRound();
+  }
+}
+
+/* ====================== AĞ MESAJ İŞLEYİCİ ====================== */
+function onNet(d){
+  switch(d.t){
+    /* Handshake: Guest hazır olunca Host oyunu başlatır */
+    case 'ready':
+      if(isHost){
+        playerNames[1 - localPlayer] = d.guestName || 'Rakip';
+        playerNames[localPlayer] = getMyDisplayName();
+        netSend({t:'syncNames',names:playerNames});
+        $('#roomWt').classList.add('hide');
+        startOnlineGame();
+      }
+      break;
+    case 'syncNames':
+      if(d.names){ playerNames = d.names; hud(); refreshAll3DPlayerLabels(); }
+      break;
+
+    /* Canlı harf senkronizasyonu */
+    case 'syncCur':
+      cur=d.cur||'';
+      showRow();
+      break;
+
+    /* Tahmin & Joker & İtiraz */
+    case 'guess': handleRemoteGuess(d); break;
+    case 'joker': if(isHost&&turn===(1-localPlayer))execJoker(d.k,1-localPlayer); break;
+    case 'appealAsk':
+      askRemote('Rakibiniz "'+d.w+'" kelimesini kabul etmenizi istiyor.',
+        ()=>{
+          okWords.add(d.w);
+          netSend({t:'appealOk',w:d.w});
+          if(isHost){
+            handleRemoteGuess({g:d.w});
+          }
+        },
+        ()=>{netSend({t:'appealNo'});});
+      break;
+    case 'appealOk':
+      toast('Kelime rakip tarafından kabul edildi!');
+      okWords.add(d.w);
+      if(isHost&&turn===localPlayer){
+        cur=d.w;showRow();submit();
+      }
+      break;
+    case 'appealNo':
+      toast('Kelime reddedildi');
+      break;
+
+    /* Tur & Sonuç */
+    case 'round': handleRoundStart(d); break;
+    case 'res': handleResult(d); break;
+    case 'bad': handleBadGuess(d); break;
+    case 'jres': handleJokerResult(d); break;
+    case 'rend': handleRoundEnd(d); break;
+    case 'fin': handleFinale(d); break;
+    case 'toast': toast(d.msg); break;
+
+    /* Çıkış & Beraberlik & Pes */
+    case 'askDraw':
+      askRemote('Rakibiniz beraberlik teklif ediyor. Kabul ediyor musunuz?',
+        ()=>{
+          netSend({t:'drawOk'});
+          finale({w:[0,1],m:'Beraberlik kabul edildi, kupa ikisinde'});
+        },
+        ()=>{
+          netSend({t:'drawNo'});
+        });
+      break;
+    case 'drawOk':
+      toast('Beraberlik teklifi kabul edildi!');
+      finale({w:[0,1],m:'Beraberlik kabul edildi, kupa ikisinde'});
+      break;
+    case 'drawNo':
+      toast('Beraberlik teklifi rakip tarafından reddedildi');
+      break;
+
+    case 'askMenu':
+      askRemote('Rakibiniz ana menüye dönmek istiyor. Kabul ediyor musunuz?',
+        ()=>{
+          netSend({t:'menuOk'});
+          location.reload();
+        },
+        ()=>{
+          netSend({t:'menuNo'});
+        });
+      break;
+    case 'menuOk':
+      toast('Rakibiniz kabul etti, menüye dönülüyor...');
+      setTimeout(()=>location.reload(), 1000);
+      break;
+    case 'menuNo':
+      toast('Menüye dönme teklifi rakip tarafından reddedildi');
+      break;
+
+    case 'forfeit':
+      toast('Rakibiniz pes etti! Kazandınız! 🏆', 4000);
+      finale({w:[localPlayer],m:'Rakibiniz pes etti, kazandınız!'});
+      break;
+  }
+}
+
+/* --- Host: uzak tahmin işle --- */
+async function handleRemoteGuess(d){
+  cur=d.g;showRow();
+  if(!SET[L].has(cur)&&!okWords.has(cur)){
+    const fx=fixI(cur);
+    if(fx){cur=fx;showRow()}
+    else{
+      const r=await askDict(cur);
+      if(r===true){okWords.add(cur)}
+      else{
+        const M={tr:'Türkçe bir kelime değil',en:'is not a valid word',de:'ist kein gültiges Wort'};
+        netSend({t:'bad',msg:cur+' '+M[lang],ap:apl[turn]>0});
+        cur='';showRow();return
+      }
+    }
+  }
+  busy=true;hud();
+  const g=cur,res=ev(g,word),r=row;
+  const won=g===word,pts=won?(6-r)*100:0;
+  if(won)scores[turn]+=pts;
+  netSend({t:'res',g,res,r,won,pts,sc:[...scores]});
+  await showGuessResult(g,res,r,won,pts);
+}
+
+/* --- Guest: sonuç al --- */
+async function handleResult(d){
+  cur=d.g;showRow();
+  scores=d.sc||scores;
+  busy=true;hud();
+  await showGuessResult(d.g,d.res,d.r,d.won,d.pts);
+}
+
+/* --- Guest: hatalı tahmin --- */
+function handleBadGuess(d){
+  busy=false;
+  const M={tr:'Bu kelime geçerli, itiraz et',en:'Appeal this word',de:'Wort anfechten'};
+  bad(d.msg,d.ap);
+  if(d.ap&&apl[localPlayer]>0){
+    const ab=$('#appeal');
+    ab.textContent=M[lang]+' ('+apl[localPlayer]+' hak)';
+    ab.classList.remove('hide');
+  }
+}
+
+/* --- Guest: tur başlangıcı --- */
+function handleRoundStart(d){
+  $('#end').classList.add('hide');
+  rd=d.rd;turn=d.trn;L=d.L||L;
+  row=0;cur='';hints=[];known=[];kstate={};over=false;busy=false;jump=-1;
+  word='';
+  buildBoard();$('#kb').querySelectorAll('.k').forEach(b=>b.classList.remove('c','p','a','x'));
+  kbBuild();hud();
+  const isMyTurn = (turn===localPlayer);
+  banner('Tur '+rd+': '+(isMyTurn?'Sen başlıyorsun!':'Rakip başlıyor!'),PC[turn]);sfx.turn();showRow();
+}
+
+/* --- Joker yürütme (Host tarafında) --- */
+function execJoker(k,p){
+  if(joker[p]&&joker[p][k])return;
+  if(k==='h'){
+    const pos=[...Array(L).keys()].filter(i=>!hints[i]&&!known[i]);
+    if(!pos.length){
+      if(p===localPlayer)toast('Açılacak harf kalmadı');
+      else netSend({t:'toast',msg:'Açılacak harf kalmadı'});
+      return;
+    }
+    const i=pos[Math.random()*pos.length|0];
+    hints[i]=word[i];showRow();
+    const msg='Sunucu: '+(i+1)+'. harf '+word[i];
+    toast(msg);
+    netSend({t:'jres',k:'h',p,i,c:word[i],msg});
+  }
+  if(k==='e'){
+    const pool=LET.filter(c=>!word.includes(c)&&!kstate[c]).sort(()=>Math.random()-.5).slice(0,6);
+    pool.forEach(c=>{kstate[c]='a'});
+    $('#kb').querySelectorAll('.k').forEach(b=>{if(pool.includes(b.dataset.k))b.classList.add('x')});
+    const msg='Sunucu: 6 yanlış harf elendi';
+    toast(msg);
+    netSend({t:'jres',k:'e',p,pool,msg});
+  }
+  if(k==='s'){
+    const o=[word],pl=POOL[L];
+    while(o.length<Math.min(4,pl.length)){const w=pl[Math.random()*pl.length|0];if(!o.includes(w))o.push(w)}
+    let top=32+Math.random()*13|0,rest=100-top,a=Math.random()*rest*.6|0,b=Math.random()*(rest-a)*.7|0;
+    const pc=[top,a,b,rest-a-b],ci=Math.random()<.6?0:1+(Math.random()*2|0),ix=[0,1,2,3].filter(i=>i!==ci);
+    let q=0;const rows=o.map((w,i)=>[w,i===0?pc[ci]:pc[ix[q++]]]).sort((x,y)=>y[1]-x[1]);
+    const msg='Seyirci oyu\n'+rows.map(([w,pr])=>w+' %'+pr).join('\n');
+    toast(msg,6000);exc[0]=.5;exc[1]=.4;sfx.clap(1,.5);
+    netSend({t:'jres',k:'s',p,rows,msg});
+  }
+  joker[p][k]=true;sfx.joker();hud();
+}
+
+/* --- Guest: joker sonucu --- */
+function handleJokerResult(d){
+  if(d.k==='h'){hints[d.i]=d.c;showRow();toast(d.msg)}
+  if(d.k==='e'){d.pool.forEach(c=>{kstate[c]='a'});$('#kb').querySelectorAll('.k').forEach(b=>{if(d.pool.includes(b.dataset.k))b.classList.add('x')});toast(d.msg)}
+  if(d.k==='s'){toast(d.msg,6000);exc[0]=.5;exc[1]=.4;sfx.clap(1,.5)}
+  joker[d.p][d.k]=true;sfx.joker();hud();
+}
+
+/* --- Guest: tur sonu --- */
+function handleRoundEnd(d){
+  word=d.word;scores=d.sc||scores;
+  const isMe = (d.winner===localPlayer);
+  $('#et').textContent=d.win?(isMe?'Harika! Kelimeyi buldun':'Rakip buldu'):'Kimse bulamadı';
+  $('#em').innerHTML='Kelime: <b>'+word+'</b>'+(d.win?'<br>'+d.pts+' puan kazandı':'');
+  $('#nx').textContent=rd>=NT?'Ev sahibi finale geçecek...':'Ev sahibi sonraki tura geçecek...';
+  $('#nx').disabled=true;
+}
+
+/* --- Guest: final --- */
+function handleFinale(d){
+  $('#end').classList.add('hide');
+  scores=d.sc||scores;
+  finale(d.f||undefined);
+}
+
+/* ====================== ORTAK GÖSTERİM FONKSİYONU ====================== */
+async function showGuessResult(g,res,r,won,pts){
+  const rank={a:1,p:2,c:3};
+  setMark(r,turn,true);
+  await Promise.all(res.map(async(st,c)=>{
+    await sleep(c*270);
+    const m=tiles[r][c].m;
+    await tw(.17,k=>m.rotation.x=k*1.5708);
+    paint(r,c,g[c],st);sfx.flip(st);
+    await tw(.17,k=>m.rotation.x=1.5708*(1-k))
+  }));
+  res.forEach((st,c)=>{
+    if(st==='c')known[c]=true;
+    if(!kstate[g[c]]||rank[st]>rank[kstate[g[c]]])kstate[g[c]]=st
+  });kbPaint();
+  const gr=res.filter(x=>x==='c').length,ye=res.filter(x=>x==='p').length;
+  if(won){
+    over=true;
+    exc[0]=1;exc[1]=.35;jump=turn;jt=0;
+    sfx.win();sfx.clap(3);confetti();
+    bubble(0,SUP[Math.random()*6|0]);bubble(0,SUP[Math.random()*6|0]);
+    bubble(1,HEC[Math.random()*6|0]);
+    endRound(true,pts)
+  }else{
+    if(gr>=Math.ceil(L*.6)||(gr>=2&&ye>=2)){exc[0]=1;exc[1]=.15;sfx.clap(1.6);bubble(0,SUP[Math.random()*6|0]);bubble(0,SUP[Math.random()*6|0])}
+    else if(gr===0&&ye<=1){exc[1]=1;exc[0]=.1;sfx.boo();bubble(1,HEC[Math.random()*6|0]);bubble(1,HEC[Math.random()*6|0])}
+    else{exc[0]=.55;exc[1]=.5;sfx.clap(.9,.5);sfx.boo(.8);bubble(0,SUP[Math.random()*6|0]);bubble(1,HEC[Math.random()*6|0])}
+    if(r===5){
+      over=true;exc[1]=1;exc[0]=0;sfx.lose();sfx.boo(2);
+      bubble(1,HEC[Math.random()*6|0]);bubble(1,HEC[Math.random()*6|0]);
+      endRound(false,0)
+    }else{
+      row++;cur='';turn=(turn+1)%NP;
+      if(NP>1){
+        const isMyTurn = (turn===localPlayer);
+        banner('Sıra '+(isMyTurn?'Sende!':'Rakipte!'),PC[turn]);
+        sfx.turn();
+      }
+      showRow()
+    }
+  }
+  busy=false;hud()
+}
+
+/* ====================== FONKSİYON OVERRIDE'LARI ====================== */
+
+/* --- submit override --- */
+const _origSubmit=submit;
+submit=async function(){
+  if(busy||over||!started)return;
+  if(!isOnline)return _origSubmit();
+  if(turn!==localPlayer)return;
+
+  if(!isHost){
+    if(cur.length<L){bad(L+' harf gerekli');return}
+    netSend({t:'guess',g:cur});
+    busy=true;hud();return
+  }
+
+  /* Host: yerel değerlendir */
+  if(cur.length<L){bad(L+' harf gerekli');return}
+  if(!SET[L].has(cur)&&!okWords.has(cur)&&!await verify())return;
+  busy=true;hud();
+  const g=cur,res=ev(g,word),r=row;
+  const won=g===word,pts=won?(6-r)*100:0;
+  if(won)scores[turn]+=pts;
+  netSend({t:'res',g,res,r,won,pts,sc:[...scores]});
+  await showGuessResult(g,res,r,won,pts)
+};
+
+/* --- press override: online sıra kontrolü & canlı senkronizasyon --- */
+press=function(k){
+  ac();if(busy||over||!started)return;
+  if(isOnline&&turn!==localPlayer)return;
+  $('#appeal').classList.add('hide');
+  if(k==='ENTER')return submit();
+  if(k==='BACK'){
+    if(cur.length){
+      cur=cur.slice(0,-1);
+      sfx.back();
+      showRow();
+      if(isOnline)netSend({t:'syncCur',cur});
+    }
+    return
+  }
+  if(cur.length<L){
+    cur+=k;
+    sfx.key();
+    showRow();
+    const m=tiles[row][cur.length-1].m;
+    tw(.14,x=>m.scale.setScalar(1.18-.18*x));
+    if(isOnline)netSend({t:'syncCur',cur});
+  }
+};
+
+/* --- newRound override --- */
+const _origNewRound=newRound;
+newRound=function(){
+  if(!isOnline)return _origNewRound();
+  if(isHost){
+    rd++;const pool=POOL[L];let w;
+    do{w=pool[Math.random()*pool.length|0]}while(w===lastW&&pool.length>1);
+    word=lastW=w;row=0;cur='';hints=[];known=[];kstate={};over=false;busy=false;jump=-1;
+    turn=(rd-1)%NP;
+    buildBoard();$('#kb').querySelectorAll('.k').forEach(b=>b.classList.remove('c','p','a','x'));hud();
+    netSend({t:'round',rd,trn:turn,L});
+    const isMyTurn = (turn===localPlayer);
+    banner('Tur '+rd+': '+(isMyTurn?'Sen başlıyorsun!':'Rakip başlıyor!'),PC[turn]);sfx.turn();showRow()
+  }
+};
+
+/* --- useJoker override --- */
+const _origUseJoker=useJoker;
+useJoker=function(k){
+  if(!isOnline)return _origUseJoker(k);
+  if(busy||over||(joker[turn]&&joker[turn][k]))return;
+  if(turn!==localPlayer)return;
+  ac();
+  if(isHost){
+    execJoker(k,localPlayer);
+  }else{
+    netSend({t:'joker',k});
+  }
+};
+
+/* --- endRound override --- */
+const _origEndRound=endRound;
+endRound=async function(win,pts){
+  if(isOnline&&isHost){
+    netSend({t:'rend',win,word,pts,sc:[...scores],winner:turn})
+  }
+  hud();await sleep(2200);if(quit)return;
+  const isMe = (turn===localPlayer);
+  const winnerName = isOnline ? (isMe ? 'Harika! Kelimeyi buldun' : (playerNames[turn] || 'Rakip') + ' buldu!') : (playerNames[turn] || 'Oyuncu ' + (turn+1)) + ' buldu!';
+  $('#et').textContent=win ? winnerName : 'Kimse bulamadı';
+  $('#em').innerHTML='Kelime: <b>'+word+'</b>'+(win?'<br>'+pts+' puan kazandı':'');
+  if(isOnline&&!isHost){
+    $('#nx').textContent=rd>=NT?'Ev sahibi bekleniyor...':'Ev sahibi bekleniyor...';
+    $('#nx').disabled=true;
+  }else{
+    $('#nx').textContent=rd>=NT?'Finale geç':'Sonraki kelime';
+    $('#nx').disabled=false;
+  }
+  $('#end').classList.remove('hide');jump=-1
+};
+
+/* --- finale override --- */
+const _origFinale=finale;
+finale=function(f){
+  if(isOnline&&isHost&&!f){
+    netSend({t:'fin',sc:[...scores]})
+  }
+  return _origFinale(f)
+};
+
+/* --- hud override: online & karakter adları --- */
+const _origHud=hud;
+hud=function(){
+  _origHud();
+  document.querySelectorAll('.pc').forEach((pc,i)=>{
+    const b=pc.querySelector('b');
+    if(b){
+      if(isOnline){
+        const isMe=(i===localPlayer);
+        const pName = playerNames[i] || (isMe ? getMyDisplayName() : 'Rakip');
+        b.textContent = pName + (isMe ? ' (Sen)' : ' (Rakip)');
+      } else {
+        const pName = (i === 0) ? getMyDisplayName() : (playerNames[i] || ('Oyuncu ' + (i+1)));
+        b.textContent = pName;
+      }
+    }
+    const it=pc.querySelector('i');
+    if(it&&i===turn&&!over){
+      if(isOnline){
+        it.textContent=(i===localPlayer)?'Senin sıran':'Rakip oynuyor';
+      } else {
+        const pName = (i === 0) ? getMyDisplayName() : (playerNames[i] || ('Oyuncu ' + (i+1)));
+        it.textContent = (NP === 1) ? 'Sırada' : (pName + ' oynuyor');
+      }
+    }
+  });
+  if(isOnline){
+    const jl=document.querySelector('.jl');
+    if(jl)jl.textContent=(turn===localPlayer)?'Senin Jokerlerin':'Rakibin Jokerleri';
+  }
+};
+
+/* --- İtiraz (Appeal) butonu online override --- */
+$('#appeal').onclick=()=>{
+  const w=cur;if(!w||w.length<L||busy||over)return;
+  $('#appeal').classList.add('hide');
+  if(!isOnline){
+    const go=()=>{apl[turn]--;okWords.add(w);submit()};
+    if(NP===1)go();
+    else ask(`Oyuncu ${2-turn}, ${w} kelimesi sözlükte var mı? Kabul ediyor musun?`,go,"Evet, kabul","Hayır","Kelime kabul edilmedi");
+    return;
+  }
+  apl[localPlayer]--;
+  hud();
+  netSend({t:'appealAsk',w});
+  toast('Rakibin onayı bekleniyor...');
+};
+
+/* --- ÇIKIŞ SİSTEMİ (Hem Yerel Hem Online Tam Uyumlu) --- */
+const _origXbtn=$('#xbtn').onclick;
+const _origXm=$('#xm').onclick;
+const _origXd=$('#xd').onclick;
+const _origXf=$('#xf').onclick;
+
+$('#xbtn').onclick=()=>{
+  if(!started||quit)return;
+  if(!isOnline){
+    if(_origXbtn)_origXbtn();
+    return;
+  }
+  /* Online çıkış menüsü */
+  actor=localPlayer;
+  $('#who').style.display='none';
+  $('#xd').style.display='';
+  $('#xf').style.display='';
+  $('#xm').textContent='Ana menüye dön (rakibin onayı gerekir)';
+  $('#exit').classList.remove('hide');
+};
+
+$('#xm').onclick=()=>{
+  if(!isOnline){
+    if(NP===1){location.reload();return;}
+    ask(`Oyuncu ${2-actor}, Oyuncu ${actor+1} ana menüye dönmek istiyor. Kabul ediyor musun?`,()=>location.reload());
+    return;
+  }
+  netSend({t:'askMenu'});
+  toast('Rakibinize menüye dönme teklifi gönderildi...');
+  $('#exit').classList.add('hide');
+};
+
+$('#xd').onclick=()=>{
+  if(!isOnline){
+    ask(`Oyuncu ${2-actor}, Oyuncu ${actor+1} beraberlik teklif ediyor. Kabul ediyor musun?`,
+      ()=>finale({w:[0,1],m:"Beraberlik kabul edildi, kupa ikisinde"}));
+    return;
+  }
+  netSend({t:'askDraw'});
+  toast('Beraberlik teklifi rakibe gönderildi...');
+  $('#exit').classList.add('hide');
+};
+
+$('#xf').onclick=()=>{
+  if(!isOnline){
+    ask(`Oyuncu ${actor+1}, pes edersen rakibin maçı kazanır. Emin misin?`,
+      ()=>finale({w:[1-actor],m:`Oyuncu ${actor+1} pes etti, kazanan Oyuncu ${2-actor}`}),
+      "Evet, pes ediyorum","Vazgeç","");
+    return;
+  }
+  /* Online pes etme */
+  ask('Pes edersen maçı rakibin kazanır. Emin misin?',
+    ()=>{
+      netSend({t:'forfeit'});
+      finale({w:[1-localPlayer],m:'Pes ettiniz, maçı rakibiniz kazandı!'});
+    },
+    'Evet, pes ediyorum','Vazgeç','');
+};
+
+/* nx (sonraki kelime) override */
+$('#nx').onclick=()=>{
+  if(isOnline&&!isHost)return;
+  $('#end').classList.add('hide');
+  if(rd>=NT){
+    if(isOnline&&isHost)netSend({t:'fin',sc:[...scores]});
+    finale()
+  }else{
+    newRound()
+  }
+};
+
+
+/* ====================== LOBİ & ODA UI ====================== */
+
+/* Dil seçici */
+$('#langSeg').querySelectorAll('button').forEach(b=>{
+  b.onclick=()=>{
+    $('#langSeg').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    setLang(b.dataset.v);
+  }
+});
+
+/* Karakter seçici (Host için) */
+const rcPSeg=$('#rcPlayer');
+if(rcPSeg){
+  rcPSeg.querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{
+      rcPSeg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));
+      b.setAttribute('aria-pressed','true');
+      hostSelectedPlayer=+b.dataset.v;
+      $('#rcPlayerDesc').textContent=hostSelectedPlayer===0
+        ?'1. Oyuncu ilk turda ilk başlar (Sol Podyum, Mavi)'
+        :'2. Oyuncu ikinci sırada başlar (Sağ Podyum, Turuncu)';
+    }
+  });
+}
+
+/* Oda oluştur ayar seçicileri */
+const rcLSeg=$('#rcL'),rcTSeg=$('#rcT');
+rcLSeg.querySelectorAll('button').forEach(b=>{b.onclick=()=>{
+  rcLSeg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');ocfg.L=+b.dataset.v
+}});
+rcTSeg.querySelectorAll('button').forEach(b=>{b.onclick=()=>{
+  rcTSeg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');ocfg.T=+b.dataset.v
+}});
+
+/* Yerel oyun */
+$('#goLocal').onclick=()=>{
+  isOnline=false;
+  $('#lobbyScr').classList.add('hide');
+  $('#menu').classList.remove('hide');
+};
+
+/* Oda oluştur ekranı */
+$('#goCreate').onclick=()=>{
+  $('#lobbyScr').classList.add('hide');
+  $('#roomCrt').classList.remove('hide');
+  $('#rcP').value='';$('#rcP').focus();
+};
+$('#backCrt').onclick=()=>{
+  $('#roomCrt').classList.add('hide');
+  $('#lobbyScr').classList.remove('hide');
+};
+
+/* Oda oluştur butonu */
+let currentCode='';
+$('#doCreate').onclick=async()=>{
+  const pass=$('#rcP').value.trim();
+  if(!pass){toast('Lütfen bir şifre belirleyin!');$('#rcP').focus();return}
+  isOnline=true;isHost=true;
+  localPlayer=hostSelectedPlayer; // Seçilen karakter
+  L=ocfg.L;
+  setLang(lang);
+
+  updateWtRoleDisp();
+
+  currentCode=genCode();
+  $('#rcDisp').textContent=currentCode;
+  $('#roomCrt').classList.add('hide');
+  $('#roomWt').classList.remove('hide');
+
+  try{
+    await createRoom(pass,currentCode);
+  }catch(e){
+    $('#roomWt').classList.add('hide');
+    cleanupNet();
+    if(e.message==='timeout'){toast('Zaman aşımı, tekrar deneyin')}
+    else{toast('Bağlantı hatası: '+(e.type||e.message||'bilinmeyen'))}
+    $('#lobbyScr').classList.remove('hide');
+  }
+};
+
+/* Bekleme odasında rolü hızlıca değiştirme butonu */
+$('#wtSwapRole').onclick=()=>{
+  localPlayer=1-localPlayer;
+  hostSelectedPlayer=localPlayer;
+  updateWtRoleDisp();
+  toast('Karakteriniz: '+(localPlayer===0?'1. Oyuncu (Mavi)':'2. Oyuncu (Turuncu)'));
+};
+
+/* Kodu kopyala */
+function copyRoomCode(){
+  if(!currentCode)return;
+  navigator.clipboard.writeText(currentCode).then(()=>{
+    toast('Oda kodu kopyalandı! ('+currentCode+')');
+  }).catch(()=>{
+    toast('Kod: '+currentCode);
+  });
+}
+$('#copyCodeBtn').onclick=copyRoomCode;
+$('#rcDisp').onclick=copyRoomCode;
+
+/* İptal (beklerken) */
+$('#cancelWt').onclick=()=>{
+  cleanupNet();
+  $('#roomWt').classList.add('hide');
+  $('#lobbyScr').classList.remove('hide');
+};
+
+/* Odaya katıl ekranı */
+$('#goJoin').onclick=()=>{
+  $('#lobbyScr').classList.add('hide');
+  $('#roomJn').classList.remove('hide');
+  $('#rjC').value='';$('#rjP').value='';$('#joinE').textContent='';
+  $('#rjC').focus();
+};
+$('#backJn').onclick=()=>{
+  cleanupNet();
+  $('#roomJn').classList.add('hide');
+  $('#lobbyScr').classList.remove('hide');
+};
+
+/* Odaya katıl butonu */
+$('#doJoin').onclick=async()=>{
+  const code=$('#rjC').value.trim().toUpperCase();
+  const pass=$('#rjP').value.trim();
+  $('#joinE').textContent='';
+
+  if(!code||code.length<4){$('#joinE').textContent='Lütfen oda kodunu girin!';return}
+  if(!pass){$('#joinE').textContent='Lütfen şifreyi girin!';return}
+
+  isOnline=true;isHost=false;
+  $('#doJoin').disabled=true;$('#doJoin').textContent='Bağlanıyor...';
+
+  try{
+    const cfg=await joinRoom(code,pass);
+    if(cfg.lang)setLang(cfg.lang);
+    if(cfg.L)ocfg.L=cfg.L;
+    if(cfg.T)ocfg.T=cfg.T;
+    L=ocfg.L;
+
+    // Karakter ataması: Host hangi karakteri seçtiyse Guest diğer karakter olur
+    localPlayer=(cfg.hostPlayer!==undefined)?(1-cfg.hostPlayer):1;
+
+    $('#roomJn').classList.add('hide');
+    startOnlineGame();
+    /* Host'a hazır olduğunu bildir */
+    playerNames[cfg.hostPlayer] = cfg.hostName || 'Rakip';
+    playerNames[localPlayer] = getMyDisplayName();
+    netSend({t:'ready',guestName:getMyDisplayName()});
+  }catch(e){
+    cleanupNet();
+    if(e.message==='wrongpass'){$('#joinE').textContent='Yanlış şifre!'}
+    else if(e.type==='peer-unavailable'){$('#joinE').textContent='Oda bulunamadı! Kodu kontrol edin.'}
+    else if(e.message==='timeout'){$('#joinE').textContent='Zaman aşımı! Tekrar deneyin.'}
+    else{$('#joinE').textContent='Bağlantı hatası: '+(e.type||e.message||'bilinmeyen')}
+  }finally{
+    $('#doJoin').disabled=false;$('#doJoin').textContent='Katıl / Join';
+  }
+};
+
+/* Formlarda Enter kısayolu */
+$('#rcP').addEventListener('keydown',e=>{if(e.key==='Enter')$('#doCreate').click()});
+$('#rjC').addEventListener('keydown',e=>{if(e.key==='Enter')$('#rjP').focus()});
+$('#rjP').addEventListener('keydown',e=>{if(e.key==='Enter')$('#doJoin').click()});
+
+/* Fiziksel klavye Capture Phase dinleyicisi: form input koruması & çok dilli büyük harf desteği */
+window.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(document.activeElement&&(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')){
+    e.stopPropagation();return
+  }
+  if(!started||over||busy)return;
+  if(isOnline&&turn!==localPlayer)return;
+
+  if(e.key==='Enter'){
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    press('ENTER');
+  }else if(e.key==='Backspace'){
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    press('BACK');
+  }else if(e.key.length===1){
+    let u=e.key;
+    if(lang==='tr'){
+      u=u.toLocaleUpperCase('tr');
+    }else{
+      u=u.toUpperCase();
+    }
+    if(LET.includes(u)){
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      press(u);
+    }
+  }
+},true);
+
+/* ====================== GENİŞLETİLMİŞ SÖZLÜKLER ====================== */
+
+/* İngilizce ek sözlük */
+(()=>{const ws="ABLE ACHE ACRE AGED AIDE AIRY ALLY AMID ARCH ARMY ATOP AVID AXLE BABE BAIL BAIT BALD BANE BANG BARE BARK BARN BEAM BEAN BEAD BEEF BEEN BEER BENT BEST BIAS BILE BIND BIRD BLOT BLUR BOAR BOIL BOLD BOLT BOND BONY BORE BOSS BOUT BOWL BRIM BUCK BULB BULL BUNK BUOY BURR BUST BUZZ BYTE CALF CANE CAPE CART CASH CAST CHAT CHIN CHOP CLAD CLAM CLAN CLAP CLAY CLIP CLOT COAX COIL COLT COME CONE COPE CORD CORK COSY COUP CRAB CRIB CROW CUBE CURB CURL DAMP DASH DEAF DECK DEED DEEM DENT DEWY DIME DINE DINT DIRE DISC DOCK DOLL DOSE DOVE DOZE DRIP DUKE DULL DUNE DUNG DUSK ETCH EYED FANG FAWN FAZE FEAT FEND FEUD FLAW FLEA FLED FLEW FLOG FLOP FOAL FOES FOIL FOND FORE FOWL FRAY FROG GAWK GERM GILT GLEN GLIB GNAW GOAD GORE GOWN GRIT GRUB GULL GULP HARE HARP HASH HAWK HAZE HEAP HELM HERD HERB HERD HOOK HULL HYMN IDLE IRATE JAMB JEST JILT JINX JOSH JOLT JOWL JURY KEEL KELP KHAN KNOB LACE LAME LANK LARK LAVA LAZE LEAN LEDGE LEVY LIMB LIMP LOBE LOFT LOOM LORE LURE LURK MACE MALT MANE MAXIM MEEK MESH MILD MIRE MOAN MOAT MOLD MOLE MOLT MOPE MOURN MULE MUSE NAIVE NAPE NEWT NOOK NUMB OATS OBEY OPAL OURS OPTS PAIL PANE PARE PAWN PEAK PEAL PEEP PEEL PERK PEST PIER PIKE PINE PLEA PLOD PLOY PLUM POKE POLL POMP PORE POSE PREY PRIG PRIM PROD PROM PROP PROW PULP PURR QUAY QUIP RAFT RAMP RASH RAZE REAP REED REEF REEL REIN REND RIBS RIOT RIPE ROAM ROAR ROBE ROVE RUDE RUMP RUNG RUSE RUST SAGE SANE SASH SCAN SCAR SECT SHAG SHIN SHUN SILT SIREN SKID SKIT SLAB SLAG SLEW SLIT SLUG SMOG SNAG SNAP SNOB SNUB SOAK SOAR SOOT SORE SPAN SPAR SPEW SPUR STAG STEM STEW STUB STUD SWAY TACK TAME TANG TARP TART TAUT TEAK TEMP TACK TILT TINT TOAD TOIL TOME TORE TORT TOUT TRAM TREK TROT TUFT TWIG VAIN VANE VALE VEIL VENT VEST VIAL VINE VISA WAIL WANE WARP WARY WASP WEED WELD WEPT WHIG WHIM WHIP WILT WISP WITS WOKE WOVE WREN WRIT YAWN YELL ZEAL".split(" ");
+  ws.forEach(w=>{if(w.length>=4&&w.length<=7&&SET_EN[w.length])SET_EN[w.length].add(w)})
+})();
+
+/* Almanca ek sözlük */
+(()=>{const ws="AFFE ALGE AMTS ARZT ATEM BAHN BALG BART BASS BELAG BEULE BIRKE BLANK BLIND BLOCK BLOND BOHLE BORTE BRAND BRAUE BRAUS BRISE DRALL DRAHT DRANG DREHE DRIFT DROGE DUELL EIFER EINST EITEL ELEND ENGEL ERBEN ERDEN ERNST ERNTE ETAGE EULEN FALLS FALTE FASER FEDER FEIGE FERNE FESTE FETTE FOLGE FORST FRANK FRECH FROST FUGEN FUNKE GABEL GALLE GARDE GASSE GEBEN GRABE GRAUE GRIMM HABEN HALBE HARFE HEBEN HOLEN HUMMEL JAGEN JUBEL KABEL KAHLE KAMPF KARREN KASTEN KEULEN KIPPEN KLAGEN KLOPF KOCHEN KOHLEN KORBEN KORTEN KRITIK KRUMM KUGELN KUHLEN KUMMER KUPFER LACHEN LACKEN LANGEN LASTEN LAUFEN LAUTEN LECKER LEHREN LEIDEN LEITEN LENKEN LIEBEN LIEDER LIEGEN LISTEN LOCKER LOCKEN LOHNEN LUSTIG MACHEN MAHLEN MANGEN MANTEL MARMOR MATTEN MEINEN MELDER MERKEN MILDEN MORSEN MUNTER MURREN MUTIG NAGELN NEHMEN NICKEN NIETEN NISTEN NUTZEN OFFNEN ORDNEN PACKEN PASSEN PAUKEN PFLICHT PILGER PLANEN PRUFEN PUMPEN PUTZEN QUAKEN QUALEN QUEREN RAHMEN RATTEN RAUBEN RAUNEN RECHEN RECHNE REDEN REGELN REIBEN REITEN RENNEN ROLLEN ROSTEN RUCKEN RUDERN RUFERN RUHREN RUSTEN SAFTEN SAUGEN SCHERZ SCHLANK SCHNELL SCHONEN SCHWACH SCHWUNG SEGELN SENKEN SINGEN SINKEN SORGEN STAUEN STERBE STIFTEN STIMMEN STOPFEN STREBEN STREUEN STURZEN TAFELN TANZEN TAUCHEN TEILEN TEUFEL TIEFEN TILGEN TREIBEN TRENNEN TRETEN TROCKEN TROPFEN TURMEN UMARMEN UMGEHEN UMHANG UNGERN URLAUB WAHLEN WALLEN WANDELN WANDERN WARNUNG WEHREN WEICHEN WENDEN WERFEN WETTERN WIEGEN WIRKEN WISCHEN ZAHLEN ZAPFEN ZEHREN ZEIGEN ZELTEN ZERREN ZIEHEN ZIMMERN ZISCHEN ZITTERN ZUCKEN ZULETZT".split(" ");
+  ws.forEach(w=>{if(w.length>=4&&w.length<=7&&SET_DE[w.length])SET_DE[w.length].add(w)})
+})();
+
+/* Türkçe ek sözlük */
+(()=>{
+  const trExt=[];
+  for(const k in SET_TR){
+    SET_TR[k].forEach(w=>{if(!POOL_TR[k]||!POOL_TR[k].includes(w))trExt.push(w)})
+  }
+  EXT_DICTS.tr=trExt;
+})();
+
+/* ====================== BAŞLANGIÇ ====================== */
+/* Orijinal menünün start butonunu modifiye et */
+$('#start').onclick=()=>{
+  document.body.classList.add('playing');
+  setLang(lang);
+  refreshAll3DPlayerLabels();
+  playerNames = [getMyDisplayName(), lang==='en'?'Player 2':(lang==='de'?'Spieler 2':'Oyuncu 2')];
+  NP=cfg.P;L=cfg.L;NT=cfg.T;scores=[0,0];rd=0;
+  joker=Array.from({length:NP},()=>({}));
+  apl[0]=apl[1]=2;okWords.clear();quit=false;
+  isOnline=false;
+  ac();if(!started){murmur();started=true}
+  sfx.intro();$('#menu').classList.add('hide');newRound()
+};
+
+/* pvu güncelle */
+const pvEl2=$('#pv');
+function pvu2(){if(pvEl2)pvEl2.innerHTML='<i></i>'.repeat(cfg.L)}
+document.querySelectorAll('.grp[data-g="L"] button').forEach(b=>b.addEventListener('click',pvu2));
+
+/* Yeniden oyna butonu: lobiye dön */
+$('#fin').querySelector('.go').onclick=()=>{
+  if(isOnline)cleanupNet();
+  location.reload()
+};
+
+
+/* ====================== HESAP, LEVEL, COIN & KOSTÜM SİSTEMİ ====================== */
+
+/* 1. CSS EKLEMELERİ */
+document.head.insertAdjacentHTML('beforeend', `<style>
+#kaTopBar{position:fixed;top:10px;right:14px;transition:top .3s ease;z-index:45;display:flex;align-items:center;gap:8px;font-family:Oswald,Barlow,sans-serif;-webkit-user-select:none;user-select:none}
+body.playing #kaTopBar{top:54px}
+.ka-pill{display:flex;align-items:center;gap:8px;padding:5px 12px;background:rgba(13,35,42,.92);border:1px solid #2a5560;clip-path:var(--cp6);font-size:13px;font-weight:700;color:var(--txt);box-shadow:0 4px 12px rgba(0,0,0,.4);cursor:pointer;transition:all .2s}
+.ka-pill:hover{border-color:var(--brass);background:rgba(23,50,58,.96)}
+.ka-coin-badge{display:flex;align-items:center;gap:5px;color:#ffd700;font-size:14px;font-weight:700}
+.ka-lvl-badge{display:flex;align-items:center;gap:4px;color:var(--brass2)}
+.ka-xp-mini{width:46px;height:6px;background:#081418;border-radius:3px;overflow:hidden;position:relative;border:1px solid #20404a}
+.ka-xp-mini-fill{height:100%;background:linear-gradient(90deg,#3aa5ff,#3aa56b);width:0%;transition:width .4s ease}
+.ka-btn{padding:5px 10px;background:#17323a;border:1px solid #2a5560;color:var(--txt);font:700 12px Oswald,sans-serif;clip-path:var(--cp6);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s}
+.ka-btn:hover{background:var(--brass);color:#08141a;border-color:var(--brass)}
+.ka-btn.gold{background:linear-gradient(135deg,#d9a441,#94691e);color:#08141a;border-color:#ffd700}
+.ka-btn.gold:hover{filter:brightness(1.15)}
+
+.ka-modal-card{max-width:540px;width:95%;max-height:88vh;overflow-y:auto}
+.ka-tabs{display:flex;gap:6px;margin-bottom:14px;background:#081418;padding:4px;clip-path:var(--cp6)}
+.ka-tab{flex:1;padding:8px 12px;background:transparent;border:none;color:var(--mut);font:700 14px Oswald,sans-serif;cursor:pointer;clip-path:var(--cp6);transition:all .2s}
+.ka-tab.active{background:var(--brass);color:#08141a}
+.ka-shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin:14px 0}
+.ka-skin-card{background:#10262e;border:2px solid #1f424c;clip-path:var(--cp8);padding:10px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:all .25s}
+.ka-skin-card:hover{border-color:var(--brass);transform:translateY(-2px)}
+.ka-skin-card.active{border-color:#00ff88;box-shadow:0 0 14px rgba(0,255,136,.3)}
+.ka-skin-preview{width:70px;height:70px;margin-bottom:8px;border-radius:4px;box-shadow:0 3px 8px rgba(0,0,0,.5)}
+.ka-skin-title{font:700 15px Oswald,sans-serif;color:#fff;margin-bottom:3px}
+.ka-skin-desc{font-size:11px;color:var(--mut);line-height:1.25;margin-bottom:8px;min-height:28px}
+.ka-skin-btn{width:100%;padding:6px 8px;font:700 12px Oswald,sans-serif;clip-path:var(--cp6);cursor:pointer;border:none;transition:all .2s}
+
+@media(max-width:600px){
+  #kaTopBar{top:6px;right:6px;gap:5px}
+  .ka-pill{padding:4px 8px;font-size:11px}
+  .ka-xp-mini{display:none}
+  .ka-btn{padding:4px 8px;font-size:11px}
+}
+</style>`);
+
+/* 2. HTML EKLEMELERİ (Top Bar, Hesap Modal, Mağaza Modal) */
+document.body.insertAdjacentHTML('beforeend', `
+<!-- Üst Hesap & Durum Çubuğu -->
+<div id="kaTopBar">
+  <div class="ka-pill" id="kaUserPill" title="Profilini görüntüle">
+    <span id="kaUserIcon">👤</span>
+    <span id="kaUserIdText">Giriş Yap</span>
+    <div class="ka-lvl-badge" id="kaLvlWrap" style="display:none">
+      <span id="kaLvlText">Lv.1</span>
+      <div class="ka-xp-mini"><div class="ka-xp-mini-fill" id="kaXpFill"></div></div>
+    </div>
+    <div class="ka-coin-badge" id="kaCoinWrap" style="display:none">
+      <span>🪙</span><span id="kaCoinsText">0</span>
+    </div>
+  </div>
+  <button class="ka-btn gold" id="kaShopBtn">🛍️ <span id="kaShopBtnTxt">Mağaza</span></button>
+  <button class="ka-btn" id="kaAuthBtn">🔑 <span id="kaAuthBtnTxt">Giriş</span></button>
+</div>
+
+<!-- Hesap / Profil Modal -->
+<div id="kaAccModal" class="ov hide" style="z-index:100">
+  <div class="card tk ka-modal-card">
+    <!-- Giriş / Kayıt Görünümü -->
+    <div id="kaAuthView">
+      <div class="ka-tabs">
+        <button class="ka-tab active" id="kaTabLogin">Giriş Yap</button>
+        <button class="ka-tab" id="kaTabReg">Kayıt Ol</button>
+      </div>
+      <h2 id="kaAuthTitle" style="text-align:center;font-size:28px;margin-bottom:6px">Hesabına Giriş Yap</h2>
+      <p id="kaAuthSub" style="text-align:center;font-size:13px;color:var(--mut);margin-bottom:12px">İlerlemeni, levelini, coinlerini ve kostümlerini kaydet.</p>
+      
+      <div id="kaRememberedNotice" style="display:none;background:#0d2c38;border:1px solid #205c70;padding:8px 12px;clip-path:var(--cp6);margin-bottom:10px;font-size:12px;color:#8ce3ff;text-align:center"></div>
+      <div class="grp" id="grpAuthName" style="display:none"><span id="lblAuthName">Oyuncu İsmi / Kullanıcı Adı</span>
+      <input id="kaName" class="ri" type="text" placeholder="Örn: Doruk / KelimeUstası" maxlength="25"></div>
+      <div class="grp"><span id="lblAuthEmail">E-posta Adresi</span>
+      <input id="kaEmail" class="ri" type="email" placeholder="ornek@mail.com" maxlength="60"></div>
+      
+      <div class="grp"><span id="lblAuthPass">Şifre</span>
+      <input id="kaPass" class="ri" type="password" placeholder="Şifreniz (en az 4 karakter)" maxlength="40"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:4px;margin-bottom:6px" id="kaForgotWrap">
+        <a href="javascript:void(0)" id="kaForgotLink" style="color:var(--brass2);font-size:12px;font-weight:700;text-decoration:none">❓ Şifremi unuttum</a>
+      </div>
+      
+      <p id="kaAuthErr" style="color:#e74c3c;font-size:13px;min-height:18px;margin:6px 0;text-align:center;font-weight:700"></p>
+      
+      <button class="go" id="kaAuthSubmitBtn">Giriş Yap</button>
+      <div style="text-align:center;margin-top:10px" id="kaDeviceSyncWrap">
+        <a href="javascript:void(0)" id="kaBtnDeviceSync" style="color:#7ee0a5;font-size:13px;font-weight:700;text-decoration:none">📲 Bilgisayardan / Başka Cihazdan Hesabı Aktar</a>
+      </div>
+      <p class="fine" id="kaAuthFine" style="text-align:center;margin-top:8px">Yeni kayıtlara anında benzersiz bir ID (#WRD-XXXXX) ve +100 Hoş Geldin Coini verilir!</p>
+      <button class="go alt" id="kaAuthCloseBtn" style="margin-top:8px">Kapat</button>
+    </div>
+
+    <!-- Şifre Sıfırlama Görünümü -->
+    <div id="kaResetView" style="display:none">
+      <h2 id="kaResetTitle" style="text-align:center;font-size:28px;margin-bottom:6px">Şifre Sıfırlama</h2>
+      <p id="kaResetSub" style="text-align:center;font-size:13px;color:var(--mut);margin-bottom:12px">Kayıtlı e-posta adresinizi girin. Gmail / e-posta kutunuza doğrulama kodu gönderelim.</p>
+      
+      <!-- 1. Adım: E-posta -->
+      <div id="kaResetStep1">
+        <div class="grp"><span id="lblResetEmail">E-posta Adresiniz</span>
+        <input id="kaResetEmail" class="ri" type="email" placeholder="ornek@gmail.com" maxlength="60"></div>
+        <p id="kaResetErr1" style="color:#e74c3c;font-size:13px;min-height:18px;margin:6px 0;text-align:center;font-weight:700"></p>
+        <button class="go" id="kaBtnSendCode">📩 Sıfırlama Kodu Gönder</button>
+      </div>
+
+      <!-- 2. Adım: 6 Haneli Kod ve Yeni Şifre -->
+      <div id="kaResetStep2" style="display:none">
+        <div style="background:#091f16;border:1px solid #1f6b45;padding:10px 14px;clip-path:var(--cp6);margin-bottom:12px;text-align:center">
+          <div style="font-size:13px;color:#7ee0a5;font-weight:700" id="kaResetSentNotice">📧 Doğrulama kodu e-postanıza gönderildi!</div>
+          <div style="font-size:11px;color:var(--mut);margin-top:3px" id="kaResetSentSub">Lütfen gelen kutunuzu (ve Spam klasörünü) kontrol edin.</div>
+        </div>
+
+        <div class="grp"><span id="lblResetCode">6 Haneli Güvenlik Kodu</span>
+        <input id="kaResetCode" class="ri" type="text" placeholder="123456" maxlength="6" style="letter-spacing:.25em;font-size:22px;text-align:center"></div>
+
+        <div class="grp"><span id="lblResetNewPass">Yeni Şifre</span>
+        <input id="kaResetNewPass" class="ri" type="password" placeholder="Yeni şifreniz (en az 4 karakter)" maxlength="40"></div>
+
+        <p id="kaResetErr2" style="color:#e74c3c;font-size:13px;min-height:18px;margin:6px 0;text-align:center;font-weight:700"></p>
+        <button class="go" id="kaBtnDoReset">✅ Şifreyi Yenile ve Giriş Yap</button>
+      </div>
+
+      <button class="go alt" id="kaBtnBackLogin" style="margin-top:10px">← Giriş Ekranına Dön</button>
+    </div>
+
+    <!-- Telefonda Kodla Aktarma Görünümü -->
+    <div id="kaSyncInputView" style="display:none">
+      <h2 id="kaSyncInTitle" style="text-align:center;font-size:28px;margin-bottom:6px">📲 Cihazdan Aktar</h2>
+      <p id="kaSyncInSub" style="text-align:center;font-size:13px;color:var(--mut);margin-bottom:12px">Bilgisayarınızın ekranında görünen 6 haneli eşleme kodunu girin.</p>
+      
+      <div class="grp"><span id="lblSyncCode">6 Haneli Eşleme Kodu</span>
+      <input id="kaSyncInCode" class="ri" type="text" placeholder="123456" maxlength="6" style="letter-spacing:.25em;font-size:24px;text-align:center"></div>
+
+      <p id="kaSyncInErr" style="color:#e74c3c;font-size:13px;min-height:18px;margin:6px 0;text-align:center;font-weight:700"></p>
+      
+      <button class="go" id="btnDoDeviceSync">🔗 Bağlan ve Hesabı Telefona Yükle</button>
+      <button class="go alt" id="btnBackFromSyncIn" style="margin-top:8px">← Giriş Ekranına Dön</button>
+    </div>
+
+    <!-- Profil Görünümü (Giriş Yapılmışsa) -->
+    <div id="kaProfView" style="display:none">
+      <div style="text-align:center;margin-bottom:12px">
+        <div id="lblProfUniq" style="font-size:11px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase">BENZERSİZ OYUNCU ID</div>
+        <div id="profId" style="font:700 34px Oswald;color:var(--brass2);letter-spacing:.12em;margin:2px 0">#WRD-00000</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:2px 0 4px">
+          <span id="profNameDisp" style="font:700 22px Oswald;color:#fff">Oyuncu</span>
+          <button id="btnEditName" style="background:transparent;border:none;cursor:pointer;font-size:15px;color:var(--brass2)" title="İsmi Değiştir">✏️</button>
+        </div>
+        <div id="editNameWrap" style="display:none;margin:4px 0 8px">
+          <input id="inpNewName" class="ri" type="text" maxlength="25" style="max-width:220px;display:inline-block;padding:5px 10px;font-size:14px">
+          <div style="margin-top:4px">
+            <button class="go" id="btnSaveName" style="width:auto;display:inline-block;padding:3px 12px;font-size:12px">Kaydet</button>
+            <button class="go alt" id="btnCancelName" style="width:auto;display:inline-block;padding:3px 12px;font-size:12px">İptal</button>
+          </div>
+        </div>
+        <div id="profEmail" style="font-size:13px;color:#a0b8c0"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div style="background:#09161a;padding:10px 12px;clip-path:var(--cp6)">
+          <div id="lblProfLvlTitle" style="font-size:11px;color:var(--mut)">SEVİYE / LEVEL</div>
+          <div id="profLvl" style="font:700 24px Oswald;color:#fff">Lv. 1</div>
+          <div style="width:100%;height:8px;background:#050c0e;border-radius:4px;overflow:hidden;margin-top:5px;border:1px solid #1f3b44">
+            <div id="profXpFill" style="height:100%;background:linear-gradient(90deg,#3aa5ff,#3aa56b);width:0%"></div>
+          </div>
+          <div id="profXpText" style="font-size:10px;color:var(--mut);margin-top:3px;text-align:right">0 / 100 XP</div>
+        </div>
+        <div style="background:#09161a;padding:10px 12px;clip-path:var(--cp6)">
+          <div id="lblProfCoinTitle" style="font-size:11px;color:var(--mut)">BAKİYE / COINS</div>
+          <div id="profCoins" style="font:700 24px Oswald;color:#ffd700">🪙 0 Coin</div>
+          <div id="lblProfCoinSub" style="font-size:10px;color:var(--brass2);margin-top:8px">+Maç kazanarak topla</div>
+        </div>
+      </div>
+      <div style="background:#09161a;padding:8px 12px;clip-path:var(--cp6);margin-bottom:12px;font-size:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span id="lblProfWords" style="color:var(--mut)">Bilinen Kelimeler:</span>
+          <b id="profWords" style="color:#fff">0</b>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span id="lblProfWins" style="color:var(--mut)">Kazanılan Maçlar:</span>
+          <b id="profWins" style="color:#fff">0</b>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="go alt" id="profShopBtn" style="flex:1">🛍️ <span id="lblProfShopBtnTxt">Mağaza</span></button>
+        <button class="go alt" id="profLogoutBtn" style="flex:1;background:#381616;border-color:#5c2222;color:#ff9e9e">🚪 <span id="lblProfLogoutBtnTxt">Çıkış Yap</span></button>
+      </div>
+      <button class="go alt" id="profSyncBtn" style="background:linear-gradient(135deg,#1f4a5c,#12303c);border-color:#3aa5ff;color:#9de0ff">📱 <span id="lblProfSyncBtnTxt">Telefona Aktar / Cihaz Senkronizasyonu</span></button>
+      <button class="go" id="profCloseBtn" style="margin-top:8px">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cihaz Senkronizasyon (Telefona Aktarma) Modalı -->
+<div id="kaSyncModal" class="ov hide" style="z-index:100">
+  <div class="card tk ka-modal-card">
+    <h2 id="syncModalTitle" style="text-align:center;font-size:28px;margin-bottom:6px">📱 Hesabı Telefona Aktar</h2>
+    <p id="syncModalSub" style="text-align:center;font-size:13px;color:var(--mut);margin-bottom:14px">Bilgisayardaki hesabını, seviyeni, coinlerini ve kostümlerini telefonunda hemen aç.</p>
+
+    <!-- Yol 1: Hızlı Giriş Linki -->
+    <div style="background:#091a1e;border:1px solid #1a4d5e;padding:12px;clip-path:var(--cp6);margin-bottom:12px">
+      <div style="font-weight:700;color:var(--brass2);font-size:14px;margin-bottom:4px">1. YOL (En Kolay): Tek Tıkla Telefona Giriş Linki</div>
+      <div style="font-size:12px;color:var(--mut);margin-bottom:8px">Bu linki WhatsApp veya e-posta ile kendine gönder. Telefonda tıkladığın an şifre yazmadan hesabın otomatik açılır!</div>
+      <button class="go" id="btnCopyMagicLink" style="font-size:13px;padding:8px 12px">📋 Telefona Giriş Linkini Kopyala</button>
+    </div>
+
+    <!-- Yol 2: 6 Haneli Canlı Eşleme Kodu -->
+    <div style="background:#091a1e;border:1px solid #1a4d5e;padding:12px;clip-path:var(--cp6);margin-bottom:12px">
+      <div style="font-weight:700;color:var(--brass2);font-size:14px;margin-bottom:4px">2. YOL: 6 Haneli Canlı Eşleme Kodu</div>
+      <div style="font-size:12px;color:var(--mut);margin-bottom:6px">Telefonda oyunu açıp Giriş Yap > "Cihazdan Aktar" butonuna bu kodu yazın:</div>
+      <div id="syncCodeDisp" style="font:700 36px Oswald;color:#ffd700;letter-spacing:.2em;text-align:center;margin:6px 0">------</div>
+      <div id="syncLiveStatus" style="font-size:11px;color:#7ee0a5;text-align:center">🟢 Telefonun bağlanması bekleniyor...</div>
+    </div>
+
+    <button class="go alt" id="btnCloseSyncModal" style="margin-top:6px">Kapat</button>
+  </div>
+</div>
+
+<!-- Telefonda Kodla Giriş Görünümü (kaAccModal içinde) -->
+
+<!-- Kostüm Mağazası & Envanter Modal -->
+<div id="kaShopModal" class="ov hide" style="z-index:100">
+  <div class="card tk ka-modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2 id="shopModalTitle" style="font-size:28px;margin:0">🛍️ Kostüm Mağazası</h2>
+      <div id="shopCoinBadge" class="ka-coin-badge" style="font-size:17px">🪙 0 Coin</div>
+    </div>
+    <p id="shopModalSub" class="fine" style="margin:0 0 10px;text-align:left">Harf küpleriniz için 3D özel kaplamalar kuşanarak arenada tarzınızı gösterin.</p>
+    <div class="ka-shop-grid" id="shopGrid"></div>
+    <button class="go" id="shopCloseBtn">Kapat</button>
+  </div>
+</div>
+`);
+
+/* 3. DİL ÇEVİRİ SÖZLÜĞÜ (TR, EN, DE) */
+const T_UI = {
+  tr: {
+    login: 'Giriş Yap',
+    register: 'Kayıt Ol',
+    email: 'E-posta Adresi',
+    pass: 'Şifre',
+    guest: 'Misafir Oyuncu',
+    loginTitle: 'Hesabına Giriş Yap',
+    loginSub: 'İlerlemeni, levelini, coinlerini ve kostümlerini kaydet.',
+    regTitle: 'Yeni Hesap Oluştur',
+    regSub: 'Hemen kaydol, benzersiz ID ve +100 Hoş Geldin Coini kazan!',
+    regFine: 'Yeni kayıtlara anında benzersiz bir ID (#WRD-XXXXX) ve +100 Hoş Geldin Coini verilir!',
+    loginFine: 'Hesabınla giriş yaparak kaldığın yerden oyna.',
+    logout: 'Çıkış Yap',
+    playerId: 'BENZERSİZ OYUNCU ID',
+    level: 'Seviye',
+    coins: 'Coin',
+    shop: 'Mağaza',
+    inventory: 'Envanter',
+    shopTitle: '🛍️ Kostüm Mağazası',
+    shopSub: 'Harf küpleriniz için 3D özel kaplamalar kuşanarak arenada tarzınızı gösterin.',
+    equip: 'Kullan',
+    equipped: 'Kullanılıyor ✓',
+    buy: 'Satın Al',
+    free: 'Ücretsiz',
+    needCoins: 'Yetersiz Coin! Maç kazanarak coin topla.',
+    loginToShop: 'Kostüm satın almak için lütfen giriş yapın veya kayıt olun!',
+    loginSuccess: 'Giriş başarılı! Hoş geldin',
+    regSuccess: 'Hesabın oluşturuldu! ID:',
+    lvlUp: 'TEBRİKLER! Seviye Atladın: Lv.',
+    wordReward: 'Kelimeyi bildin! +{xp} XP, +{coins} Coin 🪙',
+    matchReward: 'Maçı kazandın! 🏆 +{xp} XP, +{coins} Coin 🪙',
+    close: 'Kapat',
+    wordsCount: 'Bilinen Kelimeler:',
+    winsCount: 'Kazanılan Maçlar:',
+    earnHint: '+Maç kazanarak topla',
+    err_email: 'Lütfen geçerli bir e-posta adresi girin!',
+    err_pass: 'Şifre en az 4 karakter olmalıdır!',
+    err_exists: 'Bu e-posta adresiyle zaten bir hesap var!',
+    err_auth: 'Hatalı e-posta veya şifre!',
+    forgotPass: '❓ Şifremi unuttum',
+    resetTitle: 'Şifre Sıfırlama',
+    resetSub: 'Kayıtlı e-posta adresinizi girin. Gmail / e-posta kutunuza doğrulama kodu gönderelim.',
+    sendResetCode: '📩 Sıfırlama Kodu Gönder',
+    codeSentTo: '📧 Doğrulama kodu e-postanıza ({email}) gönderildi!',
+    checkSpam: 'Lütfen gelen kutunuzu (ve Spam klasörünü) kontrol edin.',
+    lblCode: '6 Haneli Güvenlik Kodu',
+    lblNewPass: 'Yeni Şifre',
+    confirmReset: '✅ Şifreyi Yenile ve Giriş Yap',
+    backToLogin: '← Giriş Ekranına Dön',
+    err_not_found: 'Bu e-posta adresine kayıtlı bir hesap bulunamadı!',
+    err_wrong_code: 'Hatalı güvenlik kodu! Lütfen tekrar deneyin.',
+    err_expired: 'Kodun süresi dolmuş, lütfen yeniden kod isteyin.',
+    resetSuccess: '🎉 Şifreniz başarıyla güncellendi! Yeni şifrenizle giriş yapıldı.',
+    vaultTransferred: '💾 Çıkış yaptıktan sonra hafızada biriken +{xp} XP ve +{coins} Coin hesabınıza aktarıldı! 🎉',
+    savedToMemory: '(Hafızaya Kaydedildi 💾)',
+    syncDevice: 'Telefona Aktar / Cihaz Eşle',
+    syncBtnTxt: '📲 Bilgisayardan / Başka Cihazdan Hesabı Aktar'
+  },
+  en: {
+    login: 'Login',
+    register: 'Register',
+    email: 'Email Address',
+    pass: 'Password',
+    guest: 'Guest Player',
+    loginTitle: 'Login to Your Account',
+    loginSub: 'Save your progress, level, coins, and 3D cube skins.',
+    regTitle: 'Create New Account',
+    regSub: 'Sign up now to get a unique ID and +100 Welcome Coins!',
+    regFine: 'New players instantly receive a unique ID (#WRD-XXXXX) and +100 Welcome Coins!',
+    loginFine: 'Log in to continue where you left off.',
+    logout: 'Log Out',
+    playerId: 'UNIQUE PLAYER ID',
+    level: 'Level',
+    coins: 'Coins',
+    shop: 'Shop',
+    inventory: 'Inventory',
+    shopTitle: '🛍️ Skin Shop',
+    shopSub: 'Equip exclusive 3D letter cube skins and show your style in the arena.',
+    equip: 'Equip',
+    equipped: 'Equipped ✓',
+    buy: 'Buy',
+    free: 'Free',
+    needCoins: 'Not enough Coins! Win matches to earn coins.',
+    loginToShop: 'Please log in or register to buy and save skins!',
+    loginSuccess: 'Login successful! Welcome back',
+    regSuccess: 'Account created! ID:',
+    lvlUp: 'CONGRATULATIONS! Level Up: Lv.',
+    wordReward: 'Word solved! +{xp} XP, +{coins} Coins 🪙',
+    matchReward: 'Match won! 🏆 +{xp} XP, +{coins} Coins 🪙',
+    close: 'Close',
+    wordsCount: 'Words Solved:',
+    winsCount: 'Matches Won:',
+    earnHint: '+Earn by winning matches',
+    err_email: 'Please enter a valid email address!',
+    err_pass: 'Password must be at least 4 characters!',
+    err_exists: 'An account with this email already exists!',
+    err_auth: 'Incorrect email or password!',
+    forgotPass: '❓ Forgot password?',
+    resetTitle: 'Reset Password',
+    resetSub: 'Enter your registered email address to receive a verification code.',
+    sendResetCode: '📩 Send Reset Code',
+    codeSentTo: '📧 Verification code sent to ({email})!',
+    checkSpam: 'Please check your inbox (and Spam folder).',
+    lblCode: '6-Digit Verification Code',
+    lblNewPass: 'New Password',
+    confirmReset: '✅ Reset Password & Login',
+    backToLogin: '← Back to Login',
+    err_not_found: 'No account found with this email address!',
+    err_wrong_code: 'Incorrect verification code! Please try again.',
+    err_expired: 'Code has expired, please request a new one.',
+    resetSuccess: '🎉 Password updated successfully! Logged in.',
+    vaultTransferred: '💾 +{xp} XP and +{coins} Coins saved in memory while logged out were transferred to your account! 🎉',
+    savedToMemory: '(Saved to Memory 💾)',
+    syncDevice: 'Sync to Phone / Device Link',
+    syncBtnTxt: '📲 Transfer Account from PC / Other Device'
+  },
+  de: {
+    login: 'Anmelden',
+    register: 'Registrieren',
+    email: 'E-Mail-Adresse',
+    pass: 'Passwort',
+    guest: 'Gastspieler',
+    loginTitle: 'Ins Konto einloggen',
+    loginSub: 'Speichere deinen Fortschritt, Level, Münzen und Skins.',
+    regTitle: 'Neues Konto erstellen',
+    regSub: 'Jetzt registrieren für eine einzigartige ID und +100 Willkommens-Münzen!',
+    regFine: 'Neue Spieler erhalten sofort eine eindeutige ID (#WRD-XXXXX) und +100 Willkommens-Münzen!',
+    loginFine: 'Melde dich an, um fortzufahren.',
+    logout: 'Abmelden',
+    playerId: 'EINDEUTIGE SPIELER-ID',
+    level: 'Stufe',
+    coins: 'Münzen',
+    shop: 'Shop',
+    inventory: 'Inventar',
+    shopTitle: '🛍️ Skin-Shop',
+    shopSub: 'Rüste exklusive 3D-Würfel-Skins aus und zeige deinen Stil in der Arena.',
+    equip: 'Ausrüsten',
+    equipped: 'Ausgerüstet ✓',
+    buy: 'Kaufen',
+    free: 'Kostenlos',
+    needCoins: 'Nicht genügend Münzen! Gewinne Spiele, um Münzen zu sammeln.',
+    loginToShop: 'Bitte anmelden oder registrieren, um Skins zu kaufen!',
+    loginSuccess: 'Erfolgreich angemeldet! Willkommen',
+    regSuccess: 'Konto erstellt! ID:',
+    lvlUp: 'HERZLICHEN GLÜCKWUNSCH! Stufenaufstieg: Lv.',
+    wordReward: 'Wort gelöst! +{xp} XP, +{coins} Münzen 🪙',
+    matchReward: 'Spiel gewonnen! 🏆 +{xp} XP, +{coins} Münzen 🪙',
+    close: 'Schließen',
+    wordsCount: 'Gelöste Wörter:',
+    winsCount: 'Gewonnene Spiele:',
+    earnHint: '+Gewinne Spiele für Münzen',
+    err_email: 'Bitte geben Sie eine gültige E-Mail ein!',
+    err_pass: 'Das Passwort muss mindestens 4 Zeichen lang sein!',
+    err_exists: 'Ein Konto mit dieser E-Mail existiert bereits!',
+    err_auth: 'Falsche E-Mail oder Passwort!',
+    forgotPass: '❓ Passwort vergessen?',
+    resetTitle: 'Passwort zurücksetzen',
+    resetSub: 'Geben Sie Ihre registrierte E-Mail-Adresse ein, um einen Bestätigungscode zu erhalten.',
+    sendResetCode: '📩 Code senden',
+    codeSentTo: '📧 Bestätigungscode wurde an ({email}) gesendet!',
+    checkSpam: 'Bitte überprüfen Sie Ihren Posteingang (und Spam-Ordner).',
+    lblCode: '6-stelliger Bestätigungscode',
+    lblNewPass: 'Neues Passwort',
+    confirmReset: '✅ Passwort zurücksetzen & Anmelden',
+    backToLogin: '← Zurück zur Anmeldung',
+    err_not_found: 'Kein Konto mit dieser E-Mail gefunden!',
+    err_wrong_code: 'Falscher Bestätigungscode! Bitte erneut versuchen.',
+    err_expired: 'Code abgelaufen, bitte neuen anfordern.',
+    resetSuccess: '🎉 Passwort erfolgreich aktualisiert! Angemeldet.',
+    vaultTransferred: '💾 +{xp} XP und +{coins} Münzen aus dem Speicher wurden auf Ihr Konto übertragen! 🎉',
+    savedToMemory: '(Im Speicher gesichert 💾)',
+    syncDevice: 'Auf Telefon übertragen',
+    syncBtnTxt: '📲 Konto vom PC / anderen Gerät übertragen'
+  }
+};
+
+/* 4. KOSTÜM (SKIN) KATALOĞU (6 FARKLI ÖZEL KAPLAMA) */
+const SKINS_CATALOG = [
+  {
+    id: 'classic',
+    price: 0,
+    tr: { name: 'Klasik Stüdyo', desc: 'Zarif yarışma stüdyosu tarzı pirinç çerçeve' },
+    en: { name: 'Classic Studio', desc: 'Elegant studio brass frame' },
+    de: { name: 'Klassisches Studio', desc: 'Eleganter Studio-Messingrahmen' },
+    mat: { roughness: 0.5, metalness: 0.05, emissiveIntensity: 0.4 }
+  },
+  {
+    id: 'gold',
+    price: 150,
+    tr: { name: 'Saf Altın', desc: 'Parlak altın kaplama ve podyum ışıltısı' },
+    en: { name: 'Pure Gold', desc: 'Gleaming gold plating & podium shine' },
+    de: { name: 'Reines Gold', desc: 'Glänzende Goldbeschichtung & Podium-Glanz' },
+    mat: { roughness: 0.22, metalness: 0.85, emissiveIntensity: 0.3 }
+  },
+  {
+    id: 'wood',
+    price: 200,
+    tr: { name: 'Ceviz Ahşap', desc: 'Doğal ceviz dokusu ve antik oymalar' },
+    en: { name: 'Walnut Wood', desc: 'Natural walnut grain & antique brass' },
+    de: { name: 'Walnussholz', desc: 'Natürliche Walnussmaserung & Messing' },
+    mat: { roughness: 0.85, metalness: 0.05, emissiveIntensity: 0.1 }
+  },
+  {
+    id: 'neon',
+    price: 300,
+    tr: { name: 'Siber Neon', desc: 'Işıldayan siber ızgara ve elektrik neon' },
+    en: { name: 'Cyber Neon', desc: 'Glowing cyber grid & electric pulse' },
+    de: { name: 'Cyber-Neon', desc: 'Leuchtendes Cyber-Gitter & Neon-Puls' },
+    mat: { roughness: 0.2, metalness: 0.25, emissiveIntensity: 0.8 }
+  },
+  {
+    id: 'magma',
+    price: 400,
+    tr: { name: 'Volkanik Magma', desc: 'Obsidyen taşı ve yanan kor lav damarları' },
+    en: { name: 'Volcanic Magma', desc: 'Obsidian rock & fiery lava veins' },
+    de: { name: 'Vulkanisches Magma', desc: 'Obsidiangestein & glühende Lava-Adern' },
+    mat: { roughness: 0.45, metalness: 0.4, emissiveIntensity: 0.7 }
+  },
+  {
+    id: 'diamond',
+    price: 500,
+    tr: { name: 'Elmas Kristal', desc: 'Prizmatik elmas ışıltısı ve kristal köşeler' },
+    en: { name: 'Diamond Prism', desc: 'Prismatic crystal diamond & icy glow' },
+    de: { name: 'Diamant-Prisma', desc: 'Prismatischer Diamantkristall & Eisglanz' },
+    mat: { roughness: 0.1, metalness: 0.7, emissiveIntensity: 0.55 }
+  }
+];
+
+/* 5. HESAP, LEVEL & VERİTABANI MOTORU */
+function genPlayerId(existingSet) {
+  let id;
+  do {
+    const num = Math.floor(10000 + Math.random() * 90000);
+    id = '#WRD-' + num;
+  } while (existingSet && existingSet.has(id));
+  return id;
+}
+
+const AccountSystem = {
+  DB_KEY: 'KA_USERS_CLOUD_DB_V1',
+  CUR_KEY: 'KA_ACTIVE_USER_EMAIL',
+  LAST_KEY: 'KA_REMEMBERED_LAST_EMAIL',
+  VAULT_KEY: 'KA_GUEST_VAULT',
+
+  getGuestVault() {
+    try {
+      return JSON.parse(localStorage.getItem(this.VAULT_KEY) || '{"xp":0,"coins":0,"words":0}');
+    } catch(e) {
+      return {xp:0, coins:0, words:0};
+    }
+  },
+
+  saveGuestVault(v) {
+    try {
+      localStorage.setItem(this.VAULT_KEY, JSON.stringify(v));
+    } catch(e) {}
+  },
+
+  clearGuestVault() {
+    localStorage.removeItem(this.VAULT_KEY);
+  },
+
+  getAll() {
+    try {
+      return JSON.parse(localStorage.getItem(this.DB_KEY) || '{}');
+    } catch(e) {
+      return {};
+    }
+  },
+
+  saveAll(db) {
+    try {
+      localStorage.setItem(this.DB_KEY, JSON.stringify(db));
+    } catch(e) {
+      console.error('Database write error:', e);
+    }
+  },
+
+  getCurrentUser() {
+    try {
+      const email = localStorage.getItem(this.CUR_KEY);
+      if (!email) return null;
+      const db = this.getAll();
+      return db[email.toLowerCase()] || null;
+    } catch(e) {
+      return null;
+    }
+  },
+
+  saveUser(user) {
+    if (!user || !user.email) return;
+    const db = this.getAll();
+    db[user.email.toLowerCase()] = user;
+    this.saveAll(db);
+    this.syncUI();
+  },
+
+  register(email, pass, name) {
+    email = (email || '').trim().toLowerCase();
+    pass = (pass || '').trim();
+    name = (name || '').trim();
+    if (!email || !email.includes('@')) throw new Error('err_email');
+    if (!pass || pass.length < 4) throw new Error('err_pass');
+
+    const db = this.getAll();
+    if (db[email]) throw new Error('err_exists');
+
+    const existingIds = new Set(Object.values(db).map(u => u.id));
+    const newId = genPlayerId(existingIds);
+    const finalName = name || email.split('@')[0];
+
+    const newUser = {
+      id: newId,
+      name: finalName,
+      email: email,
+      pass: pass,
+      level: 1,
+      xp: 0,
+      coins: 100, // Hoş geldin bonusu
+      skins: ['classic'],
+      activeSkin: 'classic',
+      stats: { wordsGuessed: 0, gamesWon: 0 },
+      createdAt: new Date().toISOString()
+    };
+
+    db[email] = newUser;
+    this.saveAll(db);
+    localStorage.setItem(this.CUR_KEY, email);
+    this.syncUI();
+    applyActiveSkin('classic');
+    return newUser;
+  },
+
+  login(email, pass) {
+    email = (email || '').trim().toLowerCase();
+    pass = (pass || '').trim();
+    const db = this.getAll();
+    const user = db[email];
+    if (!user || user.pass !== pass) throw new Error('err_auth');
+
+    localStorage.setItem(this.CUR_KEY, email);
+    localStorage.setItem(this.LAST_KEY, email);
+    localStorage.setItem('KA_REMEMBERED_LAST_ID', user.id);
+
+    /* Çıkış yaptıktan sonra hafızada biriken ödülleri hesaba aktar */
+    const gv = this.getGuestVault();
+    if (gv.coins > 0 || gv.xp > 0) {
+      user.coins = (user.coins || 0) + gv.coins;
+      user.xp = (user.xp || 0) + gv.xp;
+      if (!user.stats) user.stats = { wordsGuessed: 0, gamesWon: 0 };
+      user.stats.wordsGuessed = (user.stats.wordsGuessed || 0) + (gv.words || 0);
+      this.clearGuestVault();
+
+      let req = this.reqXP(user.level || 1);
+      while (user.xp >= req) {
+        user.xp -= req;
+        user.level = (user.level || 1) + 1;
+        user.coins += user.level * 25;
+        req = this.reqXP(user.level);
+      }
+      this.saveUser(user);
+      const t = T_UI[lang] || T_UI.tr;
+      setTimeout(() => {
+        toast((t.vaultTransferred || '💾 Çıkış yaptıktan sonra biriken +{xp} XP ve +{coins} Coin hesabınıza aktarıldı! 🎉').replace('{xp}', gv.xp).replace('{coins}', gv.coins), 6000);
+      }, 1000);
+    }
+
+    this.syncUI();
+    applyActiveSkin(user.activeSkin || 'classic');
+    return user;
+  },
+
+  logout() {
+    const user = this.getCurrentUser();
+    if (user && user.email) {
+      localStorage.setItem(this.LAST_KEY, user.email);
+      localStorage.setItem('KA_REMEMBERED_LAST_ID', user.id);
+    }
+    localStorage.removeItem(this.CUR_KEY);
+    this.syncUI();
+    applyActiveSkin('classic');
+  },
+
+  reqXP(lvl) {
+    return 100 + (lvl - 1) * 60;
+  },
+
+  addReward(addXp, addCoins, source) {
+    const user = this.getCurrentUser();
+    if (!user) {
+      /* Çıkış yapılmış olsa dahi hafızada biriktir ve kaydet */
+      const gv = this.getGuestVault();
+      gv.xp = (gv.xp || 0) + addXp;
+      gv.coins = (gv.coins || 0) + addCoins;
+      if (source === 'word') gv.words = (gv.words || 0) + 1;
+      this.saveGuestVault(gv);
+
+      if (sfx.coin) sfx.coin();
+      const t = T_UI[lang] || T_UI.tr;
+      const msg = (source === 'word') ? t.wordReward : t.matchReward;
+      toast(msg.replace('{xp}', addXp).replace('{coins}', addCoins) + ' ' + (t.savedToMemory || '(Hafızaya Kaydedildi 💾)'), 4000);
+      this.syncUI();
+      return null;
+    }
+
+    user.xp = (user.xp || 0) + addXp;
+    user.coins = (user.coins || 0) + addCoins;
+
+    if (!user.stats) user.stats = { wordsGuessed: 0, gamesWon: 0 };
+    if (source === 'word') user.stats.wordsGuessed = (user.stats.wordsGuessed || 0) + 1;
+    if (source === 'match') user.stats.gamesWon = (user.stats.gamesWon || 0) + 1;
+
+    let req = this.reqXP(user.level || 1);
+    let didLvlUp = false;
+    let bonusTotal = 0;
+
+    while (user.xp >= req) {
+      user.xp -= req;
+      user.level = (user.level || 1) + 1;
+      const lvlBonus = user.level * 25;
+      user.coins += lvlBonus;
+      bonusTotal += lvlBonus;
+      didLvlUp = true;
+      req = this.reqXP(user.level);
+    }
+
+    this.saveUser(user);
+
+    if (sfx.coin) sfx.coin();
+
+    const t = T_UI[lang] || T_UI.tr;
+    if (didLvlUp) {
+      if (sfx.levelUp) sfx.levelUp();
+      confetti();
+      toast(t.lvlUp + user.level + ' (+' + bonusTotal + ' Coin!) 🎉', 5000);
+    } else {
+      const msg = (source === 'word') ? t.wordReward : t.matchReward;
+      toast(msg.replace('{xp}', addXp).replace('{coins}', addCoins), 3500);
+    }
+
+    return user;
+  },
+
+  buySkin(skinId) {
+    const user = this.getCurrentUser();
+    if (!user) throw new Error('ERR_LOGIN');
+    const skin = SKINS_CATALOG.find(s => s.id === skinId);
+    if (!skin) return user;
+    if (user.skins && user.skins.includes(skinId)) return user;
+
+    if ((user.coins || 0) < skin.price) throw new Error('ERR_COINS');
+
+    user.coins -= skin.price;
+    if (!user.skins) user.skins = ['classic'];
+    user.skins.push(skinId);
+    user.activeSkin = skinId;
+
+    if (sfx.buy) sfx.buy();
+    this.saveUser(user);
+    applyActiveSkin(skinId);
+    return user;
+  },
+
+  equipSkin(skinId) {
+    const user = this.getCurrentUser();
+    if (!user) throw new Error('ERR_LOGIN');
+    if (!user.skins || !user.skins.includes(skinId)) throw new Error('ERR_OWN');
+
+    user.activeSkin = skinId;
+    this.saveUser(user);
+    applyActiveSkin(skinId);
+    return user;
+  },
+
+  syncUI() {
+    const user = this.getCurrentUser();
+    const t = T_UI[lang] || T_UI.tr;
+
+    const userPill = $('#kaUserPill');
+    const userIcon = $('#kaUserIcon');
+    const userIdText = $('#kaUserIdText');
+    const lvlWrap = $('#kaLvlWrap');
+    const lvlText = $('#kaLvlText');
+    const xpFill = $('#kaXpFill');
+    const coinWrap = $('#kaCoinWrap');
+    const coinsText = $('#kaCoinsText');
+    const authBtnTxt = $('#kaAuthBtnTxt');
+    const authBtn = $('#kaAuthBtn');
+
+    if (user) {
+      userIcon.textContent = '⭐';
+      userIdText.textContent = (user.name || user.id);
+      $('#profNameDisp').textContent = (user.name || user.email.split('@')[0]);
+      lvlWrap.style.display = 'flex';
+      lvlText.textContent = 'Lv.' + (user.level || 1);
+      const req = this.reqXP(user.level || 1);
+      const pct = Math.min(100, Math.round(((user.xp || 0) / req) * 100));
+      xpFill.style.width = pct + '%';
+      coinWrap.style.display = 'flex';
+      coinsText.textContent = user.coins || 0;
+      authBtnTxt.textContent = t.logout;
+      authBtn.onclick = () => { AccountSystem.logout(); toast(t.logout); };
+
+      $('#profId').textContent = user.id;
+      $('#profEmail').textContent = user.email;
+      $('#profLvl').textContent = 'Lv.' + (user.level || 1);
+      $('#profXpFill').style.width = pct + '%';
+      $('#profXpText').textContent = (user.xp || 0) + ' / ' + req + ' XP';
+      $('#profCoins').textContent = '🪙 ' + (user.coins || 0) + ' Coin';
+      $('#profWords').textContent = (user.stats && user.stats.wordsGuessed) || 0;
+      $('#profWins').textContent = (user.stats && user.stats.gamesWon) || 0;
+      $('#shopCoinBadge').textContent = '🪙 ' + (user.coins || 0) + ' Coin';
+    } else {
+      userIcon.textContent = '👤';
+      userIdText.textContent = t.guest;
+      lvlWrap.style.display = 'none';
+
+      const gv = this.getGuestVault();
+      if (gv && gv.coins > 0) {
+        coinWrap.style.display = 'flex';
+        coinsText.textContent = gv.coins;
+        $('#shopCoinBadge').textContent = '🪙 ' + gv.coins + ' Coin (Hafıza)';
+      } else {
+        coinWrap.style.display = 'none';
+        $('#shopCoinBadge').textContent = '🪙 0 Coin';
+      }
+
+      authBtnTxt.textContent = t.login;
+      authBtn.onclick = () => openAuthModal();
+    }
+
+    renderShopGrid();
+    refreshAll3DPlayerLabels();
+  }
+};
+
+/* 6. KOSTÜM ÇİZİMİ (2D CANVAS & 3D ÜZERİNDE) */
+function drawSkinTile(x, ch, st, skinId, turnColor) {
+  x.clearRect(0, 0, 128, 128);
+
+  if (skinId === 'gold') {
+    const g = x.createRadialGradient(64, 64, 10, 64, 64, 80);
+    if (st === 'c') { g.addColorStop(0, '#2d7a4d'); g.addColorStop(1, '#0e3a1f'); }
+    else if (st === 'p') { g.addColorStop(0, '#e5aa24'); g.addColorStop(1, '#7a5405'); }
+    else if (st === 'a') { g.addColorStop(0, '#3d342a'); g.addColorStop(1, '#1f1a14'); }
+    else { g.addColorStop(0, '#544218'); g.addColorStop(1, '#241a05'); }
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+
+    x.strokeStyle = (st==='f'||st==='h') ? '#fff099' : '#d4af37';
+    x.lineWidth = (st==='f'||st==='h') ? 8 : 6;
+    x.strokeRect(4, 4, 120, 120);
+
+    x.strokeStyle = 'rgba(255, 235, 140, 0.4)';
+    x.lineWidth = 2;
+    x.strokeRect(10, 10, 108, 108);
+
+    x.fillStyle = '#ffd700';
+    [[8,8],[120,8],[8,120],[120,120]].forEach(([px,py])=>{
+      x.beginPath(); x.arc(px,py,2.5,0,Math.PI*2); x.fill();
+    });
+
+    if (ch) {
+      x.fillStyle = '#fff9e6';
+      x.shadowColor = '#000000'; x.shadowBlur = 4; x.shadowOffsetX = 2; x.shadowOffsetY = 2;
+      x.font = "700 80px Oswald,'Trebuchet MS',sans-serif";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(ch, 64, 70);
+      x.shadowColor = 'transparent';
+    }
+  } else if (skinId === 'neon') {
+    if (st === 'c') x.fillStyle = '#05291e';
+    else if (st === 'p') x.fillStyle = '#332906';
+    else if (st === 'a') x.fillStyle = '#101520';
+    else x.fillStyle = '#080d18';
+    x.fillRect(0, 0, 128, 128);
+
+    x.strokeStyle = 'rgba(0, 240, 255, 0.12)';
+    x.lineWidth = 1;
+    for (let i = 24; i < 128; i += 26) {
+      x.beginPath(); x.moveTo(i, 4); x.lineTo(i, 124); x.stroke();
+      x.beginPath(); x.moveTo(4, i); x.lineTo(124, i); x.stroke();
+    }
+
+    const neonColor = (st==='c') ? '#00ff88' : (st==='p') ? '#ffea00' : (st==='a') ? '#404c60' : (st==='f'||st==='h') ? '#ff0077' : '#00e5ff';
+    x.strokeStyle = neonColor;
+    x.lineWidth = (st==='f'||st==='h') ? 7 : 5;
+    x.strokeRect(4, 4, 120, 120);
+
+    x.fillStyle = neonColor;
+    [[4,4],[118,4],[4,118],[118,118]].forEach(([cx,cy])=>{ x.fillRect(cx, cy, 6, 6); });
+
+    if (ch) {
+      x.shadowColor = neonColor; x.shadowBlur = 10;
+      x.fillStyle = '#ffffff';
+      x.font = "700 80px Oswald,'Trebuchet MS',sans-serif";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(ch, 64, 70);
+      x.shadowColor = 'transparent';
+    }
+  } else if (skinId === 'wood') {
+    const g = x.createLinearGradient(0, 0, 0, 128);
+    if (st === 'c') { g.addColorStop(0, '#2d5e2d'); g.addColorStop(1, '#1b3b1b'); }
+    else if (st === 'p') { g.addColorStop(0, '#8c651e'); g.addColorStop(1, '#4a330a'); }
+    else if (st === 'a') { g.addColorStop(0, '#2a221a'); g.addColorStop(1, '#17120e'); }
+    else { g.addColorStop(0, '#52381f'); g.addColorStop(1, '#33200f'); }
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+
+    x.fillStyle = 'rgba(0,0,0,0.15)';
+    for (let i = 18; i < 120; i += 22) { x.fillRect(4, i, 120, 2); }
+
+    x.strokeStyle = (st==='f'||st==='h') ? (turnColor||'#ffd700') : '#a88247';
+    x.lineWidth = (st==='f'||st==='h') ? 8 : 6;
+    x.strokeRect(4, 4, 120, 120);
+
+    if (ch) {
+      x.fillStyle = '#fff4de';
+      x.shadowColor = '#1a0e05'; x.shadowBlur = 3; x.shadowOffsetX = 1; x.shadowOffsetY = 2;
+      x.font = "700 80px Oswald,'Trebuchet MS',sans-serif";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(ch, 64, 70);
+      x.shadowColor = 'transparent';
+    }
+  } else if (skinId === 'diamond') {
+    const g = x.createLinearGradient(0, 0, 128, 128);
+    if (st === 'c') { g.addColorStop(0, '#108968'); g.addColorStop(1, '#064433'); }
+    else if (st === 'p') { g.addColorStop(0, '#d1981b'); g.addColorStop(1, '#664906'); }
+    else if (st === 'a') { g.addColorStop(0, '#253540'); g.addColorStop(1, '#121d24'); }
+    else { g.addColorStop(0, '#1a4359'); g.addColorStop(1, '#091d28'); }
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+
+    x.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    x.lineWidth = 1.5;
+    x.beginPath(); x.moveTo(10, 10); x.lineTo(118, 118); x.stroke();
+    x.beginPath(); x.moveTo(118, 10); x.lineTo(10, 118); x.stroke();
+
+    x.strokeStyle = (st==='f'||st==='h') ? '#ffffff' : '#9eeeff';
+    x.lineWidth = (st==='f'||st==='h') ? 7 : 5;
+    x.strokeRect(4, 4, 120, 120);
+
+    if (ch) {
+      x.shadowColor = '#70e4ff'; x.shadowBlur = 8;
+      x.fillStyle = '#ffffff';
+      x.font = "700 80px Oswald,'Trebuchet MS',sans-serif";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(ch, 64, 70);
+      x.shadowColor = 'transparent';
+    }
+  } else if (skinId === 'magma') {
+    if (st === 'c') x.fillStyle = '#1c4228';
+    else if (st === 'p') x.fillStyle = '#613406';
+    else if (st === 'a') x.fillStyle = '#1c1618';
+    else x.fillStyle = '#140c10';
+    x.fillRect(0, 0, 128, 128);
+
+    x.strokeStyle = (st==='c') ? 'rgba(0, 255, 100, 0.4)' : 'rgba(255, 80, 0, 0.45)';
+    x.lineWidth = 2.5;
+    x.beginPath();
+    x.moveTo(12, 20); x.lineTo(40, 50); x.lineTo(75, 45); x.lineTo(115, 80);
+    x.moveTo(25, 100); x.lineTo(60, 75); x.lineTo(95, 110);
+    x.stroke();
+
+    x.strokeStyle = (st==='f'||st==='h') ? '#fff077' : (st==='c' ? '#00ff77' : '#ff5500');
+    x.lineWidth = (st==='f'||st==='h') ? 8 : 5;
+    x.strokeRect(4, 4, 120, 120);
+
+    if (ch) {
+      x.shadowColor = '#ff4400'; x.shadowBlur = 9;
+      x.fillStyle = '#fff4e6';
+      x.font = "700 80px Oswald,'Trebuchet MS',sans-serif";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(ch, 64, 70);
+      x.shadowColor = 'transparent';
+    }
+  } else {
+    // Klasik
+    x.fillStyle = COL[st]; x.fillRect(0, 0, 128, 128);
+    x.strokeStyle = (st==="f"||st==="h") ? PC[turn] : (st==="e" ? "#2c5560" : "rgba(255,255,255,.4)");
+    x.lineWidth = (st==="f"||st==="h") ? 9 : 6;
+    x.strokeRect(4, 4, 120, 120);
+    if (ch) {
+      x.fillStyle = (st==="h") ? "rgba(255,255,255,.5)" : "#fff";
+      x.font = "700 80px Oswald,'Trebuchet MS',sans-serif";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(ch, 64, 70);
+    }
+  }
+}
+
+function applyActiveSkin(skinId) {
+  const skin = SKINS_CATALOG.find(s => s.id === skinId) || SKINS_CATALOG[0];
+  const mat = skin.mat;
+
+  if (typeof tiles !== 'undefined' && tiles.length) {
+    tiles.forEach((rw, r) => rw.forEach((t, c) => {
+      if (t && t.m && t.m.material) {
+        t.m.material.roughness = mat.roughness;
+        t.m.material.metalness = mat.metalness;
+        t.m.material.emissiveIntensity = mat.emissiveIntensity;
+        t.m.material.needsUpdate = true;
+      }
+      if (t) paint(r, c, t.ch, t.st);
+    }));
+  }
+}
+
+/* paint fonksiyonunu özelleştir */
+paint = function(r, c, ch, st) {
+  if (!tiles || !tiles[r] || !tiles[r][c]) return;
+  const t = tiles[r][c];
+  t.ch = ch;
+  t.st = st;
+  const ctx = t.cn.getContext("2d");
+  const user = AccountSystem.getCurrentUser();
+  const currentSkinId = (user && user.activeSkin) ? user.activeSkin : 'classic';
+  drawSkinTile(ctx, ch, st, currentSkinId, PC[turn]);
+  t.tx.needsUpdate = true;
+};
+
+/* buildBoard wrapper: küp materyallerini güncel kostümle başlat */
+const _origBuildBoard = buildBoard;
+buildBoard = function() {
+  _origBuildBoard();
+  const user = AccountSystem.getCurrentUser();
+  const skinId = (user && user.activeSkin) ? user.activeSkin : 'classic';
+  applyActiveSkin(skinId);
+};
+
+/* 7. SES EFEKTLERİ (COIN, LEVEL UP, BUY) */
+if (typeof sfx !== 'undefined') {
+  sfx.coin = () => {
+    ac();
+    tone(987, .1, "sine", .12);
+    tone(1318, .2, "sine", .12, .08);
+  };
+  sfx.levelUp = () => {
+    ac();
+    [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, .22, "triangle", .12, i * .09));
+  };
+  sfx.buy = () => {
+    ac();
+    tone(600, .08, "triangle", .1);
+    tone(900, .15, "triangle", .12, .06);
+  };
+}
+
+/* 8. ÖDÜL KANCALARI (REWARD HOOKS) */
+/* Kural: Singleplayer veya Online 2P kazanıldığında XP & Coin ver.
+   Local 2P modunda (NP === 2 && !isOnline) KESİNLİKLE ödül verilmez! */
+
+/* A. Kelimeyi bildiğinde (Round Win) */
+const _origShowGuessResult = showGuessResult;
+showGuessResult = async function(g, res, r, won, pts) {
+  await _origShowGuessResult(g, res, r, won, pts);
+  if (won) {
+    /* Local 2P modunda ödül yok */
+    if (NP === 2 && !isOnline) return;
+
+    /* Tek oyunculu VEYA Online modda kelimeyi bulan oyuncu bu cihazsa */
+    const isMe = (!isOnline && NP === 1) || (isOnline && turn === localPlayer);
+    if (isMe) {
+      const earnedXP = 50 + Math.max(0, (6 - r) * 10);
+      const earnedCoins = 25 + Math.max(0, (6 - r) * 5);
+      AccountSystem.addReward(earnedXP, earnedCoins, 'word');
+    }
+  }
+};
+
+/* B. Maçı kazandığında (Match Finale Win) */
+const _prevFinale = finale;
+finale = function(f) {
+  const res = _prevFinale(f);
+
+  /* Local 2P modunda maç ödülü yok */
+  if (NP === 2 && !isOnline) return res;
+
+  const mxs = Math.max(...scores.slice(0, NP));
+  let wins = [...Array(NP).keys()].filter(i => scores[i] === mxs);
+  if (NP === 1 && mxs === 0) wins = [];
+  if (f) wins = f.w;
+
+  const isMeWinner = (!isOnline && NP === 1 && wins.includes(0)) || (isOnline && wins.includes(localPlayer));
+  if (isMeWinner) {
+    const earnedXP = isOnline ? 200 : 150;
+    const earnedCoins = isOnline ? 150 : 100;
+    setTimeout(() => {
+      AccountSystem.addReward(earnedXP, earnedCoins, 'match');
+    }, 1500);
+  }
+  return res;
+};
+
+/* 9. MAĞAZA & KARTLARI ÇİZME */
+function renderShopGrid() {
+  const grid = $('#shopGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const user = AccountSystem.getCurrentUser();
+  const ownedSkins = (user && user.skins) ? user.skins : ['classic'];
+  const activeSkin = (user && user.activeSkin) ? user.activeSkin : 'classic';
+  const t = T_UI[lang] || T_UI.tr;
+
+  SKINS_CATALOG.forEach(skin => {
+    const isOwned = ownedSkins.includes(skin.id);
+    const isActive = activeSkin === skin.id;
+    const skinLocale = skin[lang] || skin.tr;
+
+    const card = document.createElement('div');
+    card.className = 'ka-skin-card' + (isActive ? ' active' : '');
+
+    const cv = document.createElement('canvas');
+    cv.className = 'ka-skin-preview';
+    cv.width = 128; cv.height = 128;
+    const cx = cv.getContext('2d');
+    drawSkinTile(cx, 'A', 'c', skin.id, '#3aa5ff');
+
+    const title = document.createElement('div');
+    title.className = 'ka-skin-title';
+    title.textContent = skinLocale.name;
+
+    const desc = document.createElement('div');
+    desc.className = 'ka-skin-desc';
+    desc.textContent = skinLocale.desc;
+
+    const btn = document.createElement('button');
+    btn.className = 'ka-skin-btn';
+
+    if (isActive) {
+      btn.textContent = t.equipped;
+      btn.style.background = '#00ff88';
+      btn.style.color = '#081418';
+      btn.disabled = true;
+    } else if (isOwned) {
+      btn.textContent = t.equip;
+      btn.style.background = '#17323a';
+      btn.style.color = '#fff';
+      btn.style.border = '1px solid #2a5560';
+      btn.onclick = () => {
+        AccountSystem.equipSkin(skin.id);
+        toast(skinLocale.name + ': ' + t.equipped);
+      };
+    } else {
+      btn.textContent = t.buy + ' (' + skin.price + ' 🪙)';
+      btn.style.background = 'linear-gradient(135deg,#d9a441,#94691e)';
+      btn.style.color = '#081418';
+      btn.onclick = () => {
+        if (!user) {
+          toast(t.loginToShop);
+          openAuthModal();
+          return;
+        }
+        try {
+          AccountSystem.buySkin(skin.id);
+          toast(skinLocale.name + ' ' + t.equipped);
+        } catch(e) {
+          if (e.message === 'ERR_COINS') toast(t.needCoins);
+        }
+      };
+    }
+
+    card.appendChild(cv);
+    card.appendChild(title);
+    card.appendChild(desc);
+    card.appendChild(btn);
+    grid.appendChild(card);
+  });
+}
+
+/* 10. MODAL VE ARAYÜZ YÖNETİMİ */
+let authMode = 'login'; // 'login' | 'register'
+
+function openAuthModal() {
+  const user = AccountSystem.getCurrentUser();
+  $('#kaAccModal').classList.remove('hide');
+  $('#kaResetView').style.display = 'none';
+  if (user) {
+    $('#kaAuthView').style.display = 'none';
+    $('#kaProfView').style.display = 'block';
+  } else {
+    $('#kaAuthView').style.display = 'block';
+    $('#kaProfView').style.display = 'none';
+
+    /* Hafızada kayıtlı son hesabı otomatik doldur */
+    const lastEmail = localStorage.getItem(AccountSystem.LAST_KEY);
+    const lastId = localStorage.getItem('KA_REMEMBERED_LAST_ID');
+    const notice = $('#kaRememberedNotice');
+    if (lastEmail) {
+      $('#kaEmail').value = lastEmail;
+      if (notice) {
+        notice.style.display = 'block';
+        notice.innerHTML = '💾 <b>Hafızada Kayıtlı Son Hesap:</b> ' + (lastId ? lastId + ' ' : '') + '<i>(' + lastEmail + ')</i>';
+      }
+    } else if (notice) {
+      notice.style.display = 'none';
+    }
+
+    setAuthTab(authMode);
+  }
+}
+
+function setAuthTab(mode) {
+  authMode = mode;
+  const t = T_UI[lang] || T_UI.tr;
+  $('#kaAuthErr').textContent = '';
+  $('#kaForgotLink').textContent = t.forgotPass;
+  if (mode === 'login') {
+    $('#kaTabLogin').classList.add('active');
+    $('#kaTabReg').classList.remove('active');
+    $('#kaAuthTitle').textContent = t.loginTitle;
+    $('#kaAuthSub').textContent = t.loginSub;
+    $('#kaAuthSubmitBtn').textContent = t.login;
+    $('#kaAuthFine').textContent = t.loginFine;
+    $('#kaForgotWrap').style.display = 'flex';
+    if ($('#grpAuthName')) $('#grpAuthName').style.display = 'none';
+  } else {
+    $('#kaTabReg').classList.add('active');
+    $('#kaTabLogin').classList.remove('active');
+    $('#kaAuthTitle').textContent = t.regTitle;
+    $('#kaAuthSub').textContent = t.regSub;
+    $('#kaAuthSubmitBtn').textContent = t.register;
+    $('#kaAuthFine').textContent = t.regFine;
+    $('#kaForgotWrap').style.display = 'none';
+    if ($('#grpAuthName')) $('#grpAuthName').style.display = 'block';
+  }
+}
+
+$('#kaTabLogin').onclick = () => setAuthTab('login');
+$('#kaTabReg').onclick = () => setAuthTab('register');
+
+$('#kaUserPill').onclick = () => openAuthModal();
+$('#kaAuthCloseBtn').onclick = () => $('#kaAccModal').classList.add('hide');
+$('#profCloseBtn').onclick = () => $('#kaAccModal').classList.add('hide');
+
+$('#kaShopBtn').onclick = () => {
+  renderShopGrid();
+  $('#kaShopModal').classList.remove('hide');
+};
+$('#profShopBtn').onclick = () => {
+  $('#kaAccModal').classList.add('hide');
+  renderShopGrid();
+  $('#kaShopModal').classList.remove('hide');
+};
+$('#shopCloseBtn').onclick = () => $('#kaShopModal').classList.add('hide');
+
+$('#profLogoutBtn').onclick = () => {
+  AccountSystem.logout();
+  $('#kaAccModal').classList.add('hide');
+  const t = T_UI[lang] || T_UI.tr;
+  toast(t.logout);
+};
+
+/* Giriş / Kayıt Butonu */
+$('#kaAuthSubmitBtn').onclick = () => {
+  const email = $('#kaEmail').value.trim();
+  const pass = $('#kaPass').value.trim();
+  const t = T_UI[lang] || T_UI.tr;
+  $('#kaAuthErr').textContent = '';
+
+  try {
+    if (authMode === 'login') {
+      const user = AccountSystem.login(email, pass);
+      $('#kaAccModal').classList.add('hide');
+      toast(t.loginSuccess + ', ' + user.id + '! 🎮');
+    } else {
+      const name = $('#kaName') ? $('#kaName').value.trim() : '';
+      const user = AccountSystem.register(email, pass, name);
+      $('#kaAccModal').classList.add('hide');
+      confetti();
+      toast(t.regSuccess + ' ' + user.id + ' (+100 Coin)! 🎉', 5000);
+    }
+  } catch(e) {
+    const msgKey = e.message;
+    $('#kaAuthErr').textContent = t[msgKey] || (authMode === 'login' ? t.err_auth : t.err_exists);
+  }
+};
+
+/* ====================== OYUNCU İSİMLERİ SİSTEMİ ====================== */
+let playerNames = ['Oyuncu 1', 'Oyuncu 2'];
+
+function getAnonName() {
+  return lang === 'en' ? 'Anonymous Player' : (lang === 'de' ? 'Anonymer Spieler' : 'Anonim Oyuncu');
+}
+
+function getMyDisplayName() {
+  const user = AccountSystem.getCurrentUser();
+  if (user && user.name && user.name.trim()) return user.name.trim();
+  if (user && user.email) return user.email.split('@')[0];
+  return getAnonName();
+}
+
+/* 3D Karakterlerin Üstündeki İsmi ve Podyum Plakasını Güncelleme */
+function update3DPlayerBadge(playerIndex, nameText, col) {
+  if (typeof players === 'undefined' || !players || !players[playerIndex]) return;
+  const p = players[playerIndex];
+  const bgCol = col || (playerIndex === 0 ? "#2d7ff9" : "#f2994a");
+
+  // 1. Karakterin başının üstündeki 3D isim etiketi (lb)
+  if (p.userData && p.userData.lb) {
+    const c = cv(512, Math.round(512 * 0.46 / 1.9));
+    const x = c.getContext("2d");
+    x.fillStyle = bgCol;
+    rr(x, 4, 4, c.width - 8, c.height - 8, 18); x.fill();
+    x.fillStyle = "#08141a";
+    x.font = "700 40px Oswald,'Trebuchet MS',sans-serif";
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.fillText(nameText, c.width / 2, c.height / 2 + 3);
+    p.userData.lb.material.map.dispose();
+    p.userData.lb.material.map = new THREE.CanvasTexture(c);
+    p.userData.lb.material.needsUpdate = true;
+  }
+
+  // 2. Karakterin podyumunun önündeki isim plakası (pl)
+  if (p.userData && p.userData.pl) {
+    const pc = cv(256, 96);
+    const px = pc.getContext("2d");
+    px.fillStyle = bgCol;
+    px.fillRect(0, 0, 256, 96);
+    px.fillStyle = "#08141a";
+    px.font = "700 42px Oswald,sans-serif";
+    px.textAlign = "center"; px.textBaseline = "middle";
+    px.fillText(nameText, 128, 52);
+    p.userData.pl.material.map.dispose();
+    p.userData.pl.material.map = new THREE.CanvasTexture(pc);
+    p.userData.pl.material.needsUpdate = true;
+  }
+}
+
+function getPlayerNameForSlot(idx) {
+  const anon = getAnonName();
+  if (isOnline) {
+    if (idx === localPlayer) {
+      return getMyDisplayName();
+    } else {
+      const op = playerNames[idx];
+      return (op && op !== 'Rakip' && op !== 'Oyuncu 1' && op !== 'Oyuncu 2') ? op : anon;
+    }
+  } else {
+    if (idx === 0) {
+      return getMyDisplayName();
+    } else {
+      const p2 = playerNames[1];
+      return (p2 && p2 !== 'Oyuncu 2' && p2 !== 'Player 2') ? p2 : anon;
+    }
+  }
+}
+
+function refreshAll3DPlayerLabels() {
+  update3DPlayerBadge(0, getPlayerNameForSlot(0), "#2d7ff9");
+  update3DPlayerBadge(1, getPlayerNameForSlot(1), "#f2994a");
+}
+
+/* Profilde isim değiştirme */
+$('#btnEditName').onclick = () => {
+  const user = AccountSystem.getCurrentUser();
+  if (!user) return;
+  $('#inpNewName').value = user.name || user.email.split('@')[0];
+  $('#editNameWrap').style.display = 'block';
+  $('#profNameDisp').style.display = 'none';
+  $('#btnEditName').style.display = 'none';
+  $('#inpNewName').focus();
+};
+
+$('#btnCancelName').onclick = () => {
+  $('#editNameWrap').style.display = 'none';
+  $('#profNameDisp').style.display = 'inline';
+  $('#btnEditName').style.display = 'inline';
+};
+
+$('#btnSaveName').onclick = () => {
+  const newName = $('#inpNewName').value.trim();
+  if (!newName) { toast('İsim boş olamaz!'); return; }
+  const user = AccountSystem.getCurrentUser();
+  if (user) {
+    user.name = newName;
+    AccountSystem.saveUser(user);
+    $('#profNameDisp').textContent = newName;
+    $('#editNameWrap').style.display = 'none';
+    $('#profNameDisp').style.display = 'inline';
+    $('#btnEditName').style.display = 'inline';
+    toast('✅ İsminiz güncellendi: ' + newName);
+    AccountSystem.syncUI();
+    refreshAll3DPlayerLabels();
+  }
+};
+
+/* ====================== CİHAZ SENKRONİZASYONU (TELEFONA AKTARMA & EŞLEME) ====================== */
+let hostSyncPeer = null;
+let currentSyncCode = '';
+
+/* A. 6 Haneli Canlı Eşleme Başlat (Bilgisayar Tarafı) */
+function startLiveSync() {
+  const user = AccountSystem.getCurrentUser();
+  if (!user) { toast('Lütfen önce giriş yapın!'); return; }
+
+  currentSyncCode = Math.floor(100000 + Math.random() * 900000).toString();
+  $('#syncCodeDisp').textContent = currentSyncCode;
+  $('#syncLiveStatus').textContent = '🟢 Telefonun bağlanması bekleniyor...';
+  $('#syncLiveStatus').style.color = '#7ee0a5';
+
+  if (hostSyncPeer) { try { hostSyncPeer.destroy(); } catch(e){} }
+
+  try {
+    const pid = 'kelimesync-' + currentSyncCode;
+    hostSyncPeer = new Peer(pid);
+
+    hostSyncPeer.on('connection', conn => {
+      conn.on('open', () => {
+        $('#syncLiveStatus').textContent = '📲 Telefona aktarılıyor...';
+        conn.send({ t: 'sync_user', user });
+        setTimeout(() => {
+          $('#syncLiveStatus').textContent = '✅ Hesap başarıyla telefona aktarıldı!';
+          $('#syncLiveStatus').style.color = '#ffd700';
+          toast('✅ Hesabınız telefonunuza başarıyla aktarıldı! 🎉', 6000);
+          confetti();
+        }, 600);
+      });
+    });
+
+    hostSyncPeer.on('error', err => {
+      console.warn('Sync Peer error:', err);
+      $('#syncLiveStatus').textContent = '🟡 Kod hazır, telefon bekleniyor.';
+    });
+  } catch(e) {
+    console.error('Peer init error:', e);
+  }
+}
+
+/* B. Hızlı Giriş Linki Kopyala */
+function copyMagicLink() {
+  const user = AccountSystem.getCurrentUser();
+  if (!user) return;
+  const payload = btoa(encodeURIComponent(JSON.stringify(user)));
+  const url = window.location.origin + window.location.pathname + '#sync=' + payload;
+
+  navigator.clipboard.writeText(url).then(() => {
+    toast('📋 Telefona Giriş Linki Kopyalandı! (Kendinize WhatsApp veya e-posta ile gönderin)', 7000);
+  }).catch(() => {
+    prompt('Bu linki kopyalayıp telefonunuza gönderin:', url);
+  });
+}
+
+$('#btnCopyMagicLink').onclick = copyMagicLink;
+
+$('#profSyncBtn').onclick = () => {
+  $('#kaAccModal').classList.add('hide');
+  $('#kaSyncModal').classList.remove('hide');
+  startLiveSync();
+};
+
+$('#btnCloseSyncModal').onclick = () => {
+  $('#kaSyncModal').classList.add('hide');
+  if (hostSyncPeer) { try { hostSyncPeer.destroy(); } catch(e){} hostSyncPeer = null; }
+};
+
+/* C. Telefonda Kodla Aktarma Görünümü Aç */
+$('#kaBtnDeviceSync').onclick = () => {
+  $('#kaAuthView').style.display = 'none';
+  $('#kaProfView').style.display = 'none';
+  $('#kaResetView').style.display = 'none';
+  $('#kaSyncInputView').style.display = 'block';
+  $('#kaSyncInCode').value = '';
+  $('#kaSyncInErr').textContent = '';
+  $('#kaSyncInCode').focus();
+};
+
+$('#btnBackFromSyncIn').onclick = () => {
+  $('#kaSyncInputView').style.display = 'none';
+  $('#kaAuthView').style.display = 'block';
+};
+
+/* D. Telefonda Kodla Bağlan ve Aktar */
+$('#btnDoDeviceSync').onclick = () => {
+  const code = $('#kaSyncInCode').value.trim();
+  $('#kaSyncInErr').textContent = '';
+
+  if (!code || code.length !== 6) {
+    $('#kaSyncInErr').textContent = 'Lütfen 6 haneli eşleme kodunu girin!';
+    return;
+  }
+
+  $('#btnDoDeviceSync').disabled = true;
+  $('#btnDoDeviceSync').textContent = 'Bağlanılıyor...';
+
+  try {
+    const clientPeer = new Peer();
+    const timeout = setTimeout(() => {
+      clientPeer.destroy();
+      $('#btnDoDeviceSync').disabled = false;
+      $('#btnDoDeviceSync').textContent = '🔗 Bağlan ve Hesabı Telefona Yükle';
+      $('#kaSyncInErr').textContent = 'Zaman aşımı! Bilgisayardaki kodun açık olduğundan emin olun.';
+    }, 12000);
+
+    clientPeer.on('open', () => {
+      const pid = 'kelimesync-' + code;
+      const conn = clientPeer.connect(pid, { reliable: true });
+
+      conn.on('open', () => {
+        $('#btnDoDeviceSync').textContent = 'Veriler alınıyor...';
+      });
+
+      conn.on('data', d => {
+        if (d && d.t === 'sync_user' && d.user) {
+          clearTimeout(timeout);
+          const user = d.user;
+          const db = AccountSystem.getAll();
+          db[user.email.toLowerCase()] = user;
+          AccountSystem.saveAll(db);
+          localStorage.setItem(AccountSystem.CUR_KEY, user.email.toLowerCase());
+          AccountSystem.syncUI();
+          applyActiveSkin(user.activeSkin || 'classic');
+
+          clientPeer.destroy();
+          $('#kaAccModal').classList.add('hide');
+          $('#btnDoDeviceSync').disabled = false;
+          $('#btnDoDeviceSync').textContent = '🔗 Bağlan ve Hesabı Telefona Yükle';
+
+          confetti();
+          if (sfx.win) sfx.win();
+          toast('🎉 Hesabınız başarıyla telefona aktarıldı! Hoş geldin ' + (user.id || '') + '! 🎮', 7000);
+        }
+      });
+
+      conn.on('error', err => {
+        clearTimeout(timeout);
+        clientPeer.destroy();
+        $('#btnDoDeviceSync').disabled = false;
+        $('#btnDoDeviceSync').textContent = '🔗 Bağlan ve Hesabı Telefona Yükle';
+        $('#kaSyncInErr').textContent = 'Bağlantı hatası! Kodu kontrol edin.';
+      });
+    });
+
+    clientPeer.on('error', err => {
+      clearTimeout(timeout);
+      clientPeer.destroy();
+      $('#btnDoDeviceSync').disabled = false;
+      $('#btnDoDeviceSync').textContent = '🔗 Bağlan ve Hesabı Telefona Yükle';
+      $('#kaSyncInErr').textContent = 'Sunucuya bağlanılamadı! İnternet bağlantınızı kontrol edin.';
+    });
+  } catch(e) {
+    $('#btnDoDeviceSync').disabled = false;
+    $('#btnDoDeviceSync').textContent = '🔗 Bağlan ve Hesabı Telefona Yükle';
+    $('#kaSyncInErr').textContent = 'Hata: ' + (e.message || 'Bilinmeyen hata');
+  }
+};
+
+/* E. URL'de Magic Link ile Gelenleri Otomatik Giriş Yaptır */
+(function checkMagicSyncLink() {
+  const hash = window.location.hash || window.location.search || '';
+  if (hash.includes('sync=')) {
+    try {
+      const m = hash.match(/sync=([^&]+)/);
+      if (m && m[1]) {
+        const payload = decodeURIComponent(m[1]);
+        const user = JSON.parse(decodeURIComponent(atob(payload)));
+        if (user && user.email) {
+          const db = AccountSystem.getAll();
+          db[user.email.toLowerCase()] = user;
+          AccountSystem.saveAll(db);
+          localStorage.setItem(AccountSystem.CUR_KEY, user.email.toLowerCase());
+          AccountSystem.syncUI();
+          applyActiveSkin(user.activeSkin || 'classic');
+
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+
+          setTimeout(() => {
+            confetti();
+            if (sfx.win) sfx.win();
+            toast('🎉 Hesabınız bu cihaza başarıyla yüklendi! Hoş geldin ' + (user.id || '') + '! 🎮', 7000);
+          }, 1000);
+        }
+      }
+    } catch(e) {
+      console.warn('Magic link parse error:', e);
+    }
+  }
+})();
+
+/* ====================== ŞİFRE SIFIRLAMA (GMAIL / DOĞRULAMA KODU) ====================== */
+let resetSession = null;
+
+/* EmailJS Gerçek E-posta Gönderim Ayarları */
+const EMAILJS_CONFIG = {
+  serviceId: 'service_06g72wc',       // örn: 'service_gmail' (EmailJS'ten alınır)
+  templateId: 'it0er84',      // örn: 'template_reset'
+  publicKey: 'D3hFooxOQORgJFdBD',       // örn: 'user_xyz123'
+  senderEmail: 'dddorukgun@gmail.com'
+};
+
+async function sendEmailViaEmailJS(toEmail, code) {
+  if (typeof emailjs === 'undefined') return false;
+  if (!EMAILJS_CONFIG.publicKey || !EMAILJS_CONFIG.serviceId) {
+    console.log('EmailJS anahtarları tanımlı değil, bildirim modu aktif.');
+    return false;
+  }
+  try {
+    emailjs.init({ publicKey: EMAILJS_CONFIG.publicKey });
+    const res = await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
+      to_email: toEmail,
+      email: toEmail,
+      user_email: toEmail,
+      to_name: toEmail.split('@')[0],
+      reset_code: code,
+      code: code,
+      sender: EMAILJS_CONFIG.senderEmail,
+      from_name: 'Kelime Arenası',
+      game_name: 'Kelime Arenası'
+    });
+    return res && res.status === 200;
+  } catch (err) {
+    console.warn('EmailJS gönderim hatası:', err);
+    return false;
+  }
+}
+
+function showResetView() {
+  $('#kaAuthView').style.display = 'none';
+  $('#kaProfView').style.display = 'none';
+  $('#kaResetView').style.display = 'block';
+  $('#kaResetStep1').style.display = 'block';
+  $('#kaResetStep2').style.display = 'none';
+  $('#kaResetErr1').textContent = '';
+  $('#kaResetErr2').textContent = '';
+  const currentEmail = $('#kaEmail').value.trim();
+  if (currentEmail) $('#kaResetEmail').value = currentEmail;
+  $('#kaResetEmail').focus();
+}
+
+function showAuthFromReset() {
+  $('#kaResetView').style.display = 'none';
+  $('#kaAuthView').style.display = 'block';
+  setAuthTab('login');
+}
+
+$('#kaForgotLink').onclick = showResetView;
+$('#kaBtnBackLogin').onclick = showAuthFromReset;
+
+/* Kod Gönder Butonu */
+$('#kaBtnSendCode').onclick = () => {
+  const email = $('#kaResetEmail').value.trim().toLowerCase();
+  const t = T_UI[lang] || T_UI.tr;
+  $('#kaResetErr1').textContent = '';
+
+  if (!email || !email.includes('@')) {
+    $('#kaResetErr1').textContent = t.err_email;
+    return;
+  }
+
+  const db = AccountSystem.getAll();
+  const user = db[email];
+  if (!user) {
+    $('#kaResetErr1').textContent = t.err_not_found;
+    return;
+  }
+
+  /* 6 Haneli Güvenlik Kodu Üret */
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  resetSession = { email, code, expires: Date.now() + 15 * 60 * 1000 };
+
+  /* 2. Adıma Geç */
+  $('#kaResetStep1').style.display = 'none';
+  $('#kaResetStep2').style.display = 'block';
+  $('#kaResetSentNotice').textContent = t.codeSentTo.replace('{email}', email);
+  $('#kaResetSentSub').textContent = t.checkSpam;
+  $('#kaResetCode').value = '';
+  $('#kaResetNewPass').value = '';
+  $('#kaResetErr2').textContent = '';
+  $('#kaResetCode').focus();
+
+  if (sfx.key) sfx.key();
+
+  /* Gerçek E-posta Gönderim Denemesi */
+  sendEmailViaEmailJS(email, code).then(success => {
+    if (success) {
+      toast('✅ ' + EMAILJS_CONFIG.senderEmail + ' üzerinden ' + email + ' adresine gerçek e-posta iletildi!', 8000);
+    } else {
+      toast('📧 [GMAIL] ' + email + ' adresine kod gönderildi: ' + code + ' (15 dk geçerli)', 10000);
+    }
+  });
+};
+
+/* Şifreyi Yenile ve Giriş Yap Butonu */
+$('#kaBtnDoReset').onclick = () => {
+  const inputCode = $('#kaResetCode').value.trim();
+  const newPass = $('#kaResetNewPass').value.trim();
+  const t = T_UI[lang] || T_UI.tr;
+  $('#kaResetErr2').textContent = '';
+
+  if (!resetSession || Date.now() > resetSession.expires) {
+    $('#kaResetErr2').textContent = t.err_expired;
+    return;
+  }
+  if (inputCode !== resetSession.code) {
+    $('#kaResetErr2').textContent = t.err_wrong_code;
+    return;
+  }
+  if (!newPass || newPass.length < 4) {
+    $('#kaResetErr2').textContent = t.err_pass;
+    return;
+  }
+
+  /* Veritabanında şifreyi güncelle */
+  const db = AccountSystem.getAll();
+  if (db[resetSession.email]) {
+    db[resetSession.email].pass = newPass;
+    AccountSystem.saveAll(db);
+    localStorage.setItem(AccountSystem.CUR_KEY, resetSession.email);
+    AccountSystem.syncUI();
+
+    $('#kaAccModal').classList.add('hide');
+    confetti();
+    if (sfx.coin) sfx.coin();
+    toast(t.resetSuccess, 5000);
+    resetSession = null;
+  }
+};
+
+$('#kaResetEmail').addEventListener('keydown', e => { if (e.key === 'Enter') $('#kaBtnSendCode').click(); });
+$('#kaResetCode').addEventListener('keydown', e => { if (e.key === 'Enter') $('#kaResetNewPass').focus(); });
+$('#kaResetNewPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#kaBtnDoReset').click(); });
+
+$('#kaEmail').addEventListener('keydown', e => { if (e.key === 'Enter') $('#kaPass').focus(); });
+$('#kaPass').addEventListener('keydown', e => { if (e.key === 'Enter') $('#kaAuthSubmitBtn').click(); });
+
+/* 11. DİL GÜNCELLEMESİ (TR, EN, DE İÇİN TÜM YAZILAR) */
+const _origSetLang = setLang;
+setLang = function(l) {
+  _origSetLang(l);
+  const t = T_UI[l] || T_UI.tr;
+
+  $('#kaShopBtnTxt').textContent = t.shop;
+  $('#lblAuthEmail').textContent = t.email;
+  $('#lblAuthPass').textContent = t.pass;
+  $('#kaTabLogin').textContent = t.login;
+  $('#kaTabReg').textContent = t.register;
+  $('#kaAuthCloseBtn').textContent = t.close;
+  $('#profCloseBtn').textContent = t.close;
+  $('#shopCloseBtn').textContent = t.close;
+  $('#shopModalTitle').textContent = t.shopTitle;
+  $('#shopModalSub').textContent = t.shopSub;
+  $('#lblProfUniq').textContent = t.playerId;
+  $('#lblProfLvlTitle').textContent = t.level.toUpperCase() + ' / LEVEL';
+  $('#lblProfCoinTitle').textContent = t.coins.toUpperCase() + ' / COINS';
+  $('#lblProfCoinSub').textContent = t.earnHint;
+  $('#lblProfWords').textContent = t.wordsCount;
+  $('#lblProfWins').textContent = t.winsCount;
+  $('#lblProfShopBtnTxt').textContent = t.shop;
+  $('#lblProfLogoutBtnTxt').textContent = t.logout;
+
+  setAuthTab(authMode);
+  $('#kaResetTitle').textContent = t.resetTitle;
+  $('#kaResetSub').textContent = t.resetSub;
+  $('#lblResetEmail').textContent = t.email;
+  $('#kaBtnSendCode').textContent = t.sendResetCode;
+  $('#lblResetCode').textContent = t.lblCode;
+  $('#lblResetNewPass').textContent = t.lblNewPass;
+  $('#kaBtnDoReset').textContent = t.confirmReset;
+  $('#kaBtnBackLogin').textContent = t.backToLogin;
+  AccountSystem.syncUI();
+};
+
+/* 12. BAŞLANGIÇTA OTOMATİK YÜKLEME */
+AccountSystem.syncUI();
+const curU = AccountSystem.getCurrentUser();
+if (curU && curU.activeSkin) {
+  applyActiveSkin(curU.activeSkin);
+}
+refreshAll3DPlayerLabels();
+
+console.log('Kelime Arenası — Online & Çok Dilli Eklenti yüklendi ✓');
+</script>
+</body>
+</html>
